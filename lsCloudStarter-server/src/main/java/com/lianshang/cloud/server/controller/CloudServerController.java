@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@ConditionalOnMissingBean(CloudController.class)
+@ConditionalOnMissingBean(CloudServerController.class)
 @RequestMapping("/lsCloud")
-public class CloudController {
+public class CloudServerController {
 
   /**
    * 目标bean
@@ -33,6 +33,10 @@ public class CloudController {
     }
   }
 
+  /**
+   * 返回api列表
+   * @return
+   */
   @ResponseBody
   @RequestMapping("/")
   public List<Map<String, Object>> getApiList(){

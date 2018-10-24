@@ -1,8 +1,10 @@
 package com.lianshang.cloud.server.config;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import com.lianshang.cloud.server.annotation.LsCloudService;
@@ -80,5 +82,14 @@ public class ServerStarterConfig implements ApplicationListener<ContextRefreshed
     }
     log.error ("调用service失败,{}", interfaceName);
     return null;
+  }
+
+  /**
+   * 返回api列表
+   * @return
+   */
+  public static List<Map<String, Object>> getApiList(){
+    List<Map<String,Object>> apiList = new ArrayList<> ();
+    return apiList;
   }
 }
