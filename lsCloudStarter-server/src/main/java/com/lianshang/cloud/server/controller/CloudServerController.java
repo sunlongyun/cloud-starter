@@ -2,14 +2,16 @@ package com.lianshang.cloud.server.controller;
 
 import com.lianshang.cloud.server.beans.BaseRequest;
 import com.lianshang.cloud.server.config.ServerStarterConfig;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@RequestMapping("/lsCloud")
 @ConditionalOnMissingBean(CloudController.class)
+@RequestMapping("/lsCloud")
 public class CloudController {
 
   /**
@@ -30,4 +32,11 @@ public class CloudController {
      return target;
     }
   }
+
+  @ResponseBody
+  @RequestMapping("/")
+  public List<Map<String, Object>> getApiList(){
+    return ServerStarterConfig.getApiList ();
+  }
+
 }

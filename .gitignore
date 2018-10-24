@@ -1,25 +1,41 @@
-/target/
-!.mvn/wrapper/maven-wrapper.jar
+#ignore target under current directory and all subdirectories:
+target/
+*/target/
+test-outputgit /
+*/test-output/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
+#ignore settings & gitignore file
+.settings/
+*/.settings/
 .springBeans
-.sts4-cache
+*/.springBeans
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+#ignore svn files
+.svn
+*/.svn
+
+f2e/
+
+.project
+
+.metadata
+
+*/.project
+
+.classpath
+*/.classpath
+
+.data/
+*/.data/
+*~
+
+.idea/
 *.iml
-*.ipr
 
-### NetBeans ###
-/nbproject/private/
-/build/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+#logs
+*/*/logs/
+
+.DS_Store
+
+bin/
+*/bin/
