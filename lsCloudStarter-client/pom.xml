@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>cloud-client-starter</artifactId>
+    <name>cloud-client-starter</name>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>com.lianshang.cloud</groupId>
+        <artifactId>cloud-starter</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <distributionManagement>
+        <!-- 快照版包仓库 -->
+        <snapshotRepository>
+            <!-- 必须和Maven Settings文件中snapshot发布私服部分一致 -->
+            <id>snapshots</id>
+            <name>ActivityCenter Porject Snapshot</name>
+            <!--http://ip地址/nexus/content/repositories/snapshots/-->
+            <url>http://artifactory.lsfash.cn/artifactory/libs-snapshot-local</url>
+            <uniqueVersion>true</uniqueVersion>
+        </snapshotRepository>
+
+        <!-- 发行版包仓库 -->
+        <repository>
+            <!-- 必须和Maven Settings文件中release发布私服部分一致 -->
+            <id>releases</id>
+            <name>ActivityCenter Porject Release</name>
+            <!--http://ip地址/nexus/content/repositories/releases/-->
+            <url>http://artifactory.lsfash.cn/artifactory/libs-release-local</url>
+        </repository>
+    </distributionManagement>
+
+</project>
