@@ -24,24 +24,24 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @EnableEurekaClient
 @ConditionalOnMissingBean(ServerStarterConfig.class)
-public class ServerStarterConfig implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware{
+public class ServerStarterConfig implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware {
+
   private ApplicationContext applicationContext;
   private static Map<String, Object> cloudServiceMap = new HashMap<> ();
 
   /**
    * 保存服务发布者的bean
-   * @param contextRefreshedEvent
    */
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
 
-    Map<String, Object> cloudServices =  applicationContext.getBeansWithAnnotation (LsCloudService.class);
-    if(!CollectionUtils.isEmpty (cloudServices) ){
+    Map<String, Object> cloudServices = applicationContext.getBeansWithAnnotation (LsCloudService.class);
+    if (!CollectionUtils.isEmpty (cloudServices)) {
       Collection<?> values = cloudServices.values ();
-      for(Object v : values){
+      for (Object v : values) {
         Class<?>[] inters = v.getClass ().getInterfaces ();
-        for(Class inter : inters){
-          if(inter.isInterface ()){
+        for (Class inter : inters) {
+          if (inter.isInterface ()) {
             cloudServiceMap.put (inter.getName (), v);
           }
         }
@@ -57,28 +57,24 @@ public class ServerStarterConfig implements ApplicationListener<ContextRefreshed
 
   /**
    * 回调服务提供者
-   * @param interfaceName
-   * @param methodName
-   * @param params
-   * @return
    */
-  public static  Object execute(String interfaceName, String methodName, Object ... params){
+  public static Object execute(String interfaceName, String methodName, Object... params) {
 
     Object bean = cloudServiceMap.get (interfaceName);
-    if(bean == null){
+    if (bean == null) {
       log.error ("未找接口对应的bean==>{}", interfaceName);
       return null;
     }
     Method[] methods = bean.getClass ().getMethods ();
-    for(Method method : methods){
-      if(method.getName ().equals (methodName) && method.getParameterTypes ().length == params.length){
-       try {
-        Object value = method.invoke (bean, params);
-        return value;
-       }catch (Exception e){
-         log.error ("调用service失败,{}", e);
-         e.printStackTrace ();
-       }
+    for (Method method : methods) {
+      if (method.getName ().equals (methodName) && method.getParameterTypes ().length == params.length) {
+        try {
+          Object value = method.invoke (bean, params);
+          return value;
+        } catch (Exception e) {
+          log.error ("调用service失败,{}", e);
+          e.printStackTrace ();
+        }
       }
     }
     log.error ("调用service失败,{}", interfaceName);
@@ -87,16 +83,32 @@ public class ServerStarterConfig implements ApplicationListener<ContextRefreshed
 
   /**
    * 返回api列表
-   * @return
    */
-  public static List<Map<String, Object>> getApiList(){
-    List<Map<String,Object>> apiList = new ArrayList<> ();
+  public static List<Map<String, Object>> getApiList() {
+    List<Map<String, Object>> apiList = new ArrayList<> ();
     Iterator<String> keys = cloudServiceMap.keySet ().iterator ();
-    while(keys.hasNext ()){
+    while (keys.hasNext ()) {
       Map<String, Object> data = new HashMap<> ();
       String key = keys.next ();
       data.put ("interfaceName", key);
+      Object bean = cloudServiceMap.get (key);
+      if (null != bean) {
+        Class clzz = bean.getClass ();
+        Method[] methods = clzz.getMethods ();
+        if(null != methods){
+          List<Map<String, Object>> methodList = new ArrayList<> ();
+          data.put ("methodList", methodList);
+          for(Method m : methods){
+            String methodName = m.getName ();
+            Map<String, Object> methodData = new HashMap<> ();
+            methodList.add (methodData);
 
+
+            methodData.put ("methodName", methodName);
+
+          }
+        }
+      }
       apiList.add (data);
     }
     return apiList;
