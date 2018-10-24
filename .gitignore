@@ -1,9 +1,9 @@
 #ignore target under current directory and all subdirectories:
+.gitignore
 target/
 */target/
-test-outputgit /
+test-output/
 */test-output/
-
 #ignore settings & gitignore file
 .settings/
 */.settings/

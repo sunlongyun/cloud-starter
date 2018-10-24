@@ -93,24 +93,37 @@ public class ServerStarterConfig implements ApplicationListener<ContextRefreshed
       data.put ("interfaceName", key);
       Object bean = cloudServiceMap.get (key);
       if (null != bean) {
-        Class clzz = bean.getClass ();
-        Method[] methods = clzz.getMethods ();
-        if(null != methods){
-          List<Map<String, Object>> methodList = new ArrayList<> ();
-          data.put ("methodList", methodList);
-          for(Method m : methods){
-            String methodName = m.getName ();
-            Map<String, Object> methodData = new HashMap<> ();
-            methodList.add (methodData);
-
-
-            methodData.put ("methodName", methodName);
-
-          }
-        }
+        setMethodInfo (data, bean);
       }
       apiList.add (data);
     }
     return apiList;
+  }
+
+  private static void setMethodInfo(Map<String, Object> data, Object bean) {
+    Class clzz = bean.getClass ();
+    Method[] methods = clzz.getMethods ();
+    if(null != methods){
+      List<Map<String, Object>> methodList = new ArrayList<> ();
+      data.put ("methodList", methodList);
+      for(Method m : methods){
+        String methodName = m.getName ();
+        if(methodName.equals ("wait")
+            || methodName.equals ("equals")
+            || methodName.equals ("toString")
+            || methodName.equals ("hashCode")
+            || methodName.equals ("getClass")
+            || methodName.equals ("notify")
+            || methodName.equals ("notifyAll")){
+          continue;
+        }
+        Map<String, Object> methodData = new HashMap<> ();
+        methodList.add (methodData);
+
+
+        methodData.put ("methodName", methodName);
+        methodData.put ("args", m.getParameterTypes ());
+      }
+    }
   }
 }

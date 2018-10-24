@@ -1,7 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.springCloud.study.registerCenter.RegisterCenterApplicationTests
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.833 s <<< FAILURE! - in com.springCloud.study.registerCenter.RegisterCenterApplicationTests
-initializationError(com.springCloud.study.registerCenter.RegisterCenterApplicationTests)  Time elapsed: 0.017 s  <<< ERROR!
-java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
-
