@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +91,14 @@ public class ServerStarterConfig implements ApplicationListener<ContextRefreshed
    */
   public static List<Map<String, Object>> getApiList(){
     List<Map<String,Object>> apiList = new ArrayList<> ();
+    Iterator<String> keys = cloudServiceMap.keySet ().iterator ();
+    while(keys.hasNext ()){
+      Map<String, Object> data = new HashMap<> ();
+      String key = keys.next ();
+      data.put ("interfaceName", key);
+
+      apiList.add (data);
+    }
     return apiList;
   }
 }
