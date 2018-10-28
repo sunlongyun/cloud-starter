@@ -66,9 +66,10 @@ public class SeriesLogsConfigRegistrar implements ImportBeanDefinitionRegistrar 
 						lsReq = getValueFromCookie(request, paramName);
 					}
 					if (StringUtils.isEmpty(lsReq)) {
-						lsReq = "【" + UUID.randomUUID() + "_"
-								+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes()) + "】";
+						lsReq =UUID.randomUUID() + "_"
+								+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes());
 					}
+					lsReq = "【"+lsReq+"】";
 					return lsReq;
 				}
 				/**
