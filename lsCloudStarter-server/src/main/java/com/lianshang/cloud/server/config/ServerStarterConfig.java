@@ -7,14 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -23,13 +16,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.lianshang.cloud.server.annotation.LsCloudService;
-import com.lianshang.cloud.server.utils.CRC8Util;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableEurekaClient
 @ConditionalOnMissingBean(ServerStarterConfig.class)
 public class ServerStarterConfig
-		implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware, WebMvcConfigurer {
+		implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
 	private static Map<String, Object> cloudServiceMap = new HashMap<>();
@@ -135,69 +123,5 @@ public class ServerStarterConfig
 				methodData.put("args", m.getParameterTypes());
 			}
 		}
-	}
-
-	@Override
-	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(new HandlerInterceptor() {
-			@Override
-			public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-					throws Exception {
-				String lsReq = getLsReq(request);
-				MDC.put("lsReq", lsReq);
-				return HandlerInterceptor.super.preHandle(request, response, handler);
-			}
-
-			/**
-			 * 获取lsReq
-			 * 
-			 * @param request
-			 * @return
-			 */
-			private String getLsReq(HttpServletRequest request) {
-				String lsReq = request.getHeader("lsReq");
-				if (StringUtils.isEmpty(lsReq)) {
-					lsReq = request.getParameter("lsReq");
-				}
-				if (StringUtils.isEmpty(lsReq)) {
-					lsReq = getValueFromCookie(request, "lsReq");
-				}
-				if (StringUtils.isEmpty(lsReq)) {
-					lsReq = "【" + UUID.randomUUID() + "_"
-							+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes()) + "】";
-				}
-				return lsReq;
-			}
-
-			/**
-			 * 从cookie取值
-			 * 
-			 * @param request
-			 * @param lsReq
-			 * @return
-			 */
-			private String getValueFromCookie(HttpServletRequest request, String lsReq) {
-				// 读取cookie
-				Cookie[] cookies = request.getCookies();
-				if (cookies != null) {
-					// 遍历数组
-					for (Cookie cookie : cookies) {
-						if (cookie.getName().equals(lsReq)) {
-							// 取出cookie的值
-							String value = cookie.getValue();
-							return value;
-						}
-					}
-				}
-				return null;
-			}
-
-			@Override
-			public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-					ModelAndView modelAndView) throws Exception {
-				MDC.remove("lsReq");
-				HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
-			}
-		});
 	}
 }

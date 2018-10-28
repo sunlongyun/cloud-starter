@@ -5,14 +5,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -29,13 +23,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.lianshang.cloud.client.annotation.LsCloudAutowired;
-import com.lianshang.cloud.client.utils.CRC8Util;
 import com.lianshang.cloud.client.utils.JsonUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +39,7 @@ import net.sf.cglib.proxy.MethodProxy;
 @EnableEurekaClient
 @EnableDiscoveryClient
 @ConditionalOnMissingBean(ClientStartConfig.class)
-public class ClientStartConfig implements ApplicationContextAware, BeanPostProcessor, WebMvcConfigurer {
+public class ClientStartConfig implements ApplicationContextAware, BeanPostProcessor {
 
 	public static final String CLOUD_CLIENT_TEMPLATE = "serverNameRestTemplate";
 	public static final String URL_CLIENT_TEMPLATE = "urlNameRestTemplate";
@@ -260,65 +249,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 		}
 	}
 
-	@Override
-	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(new HandlerInterceptor() {
-			@Override
-			public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-					throws Exception {
-				String lsReq = getLsReq(request);
-				MDC.put("lsReq", lsReq);
-				return true;
-			}
-			/**
-			 * 获取lsReq
-			 * @param request
-			 * @return
-			 */
-			private String getLsReq(HttpServletRequest request) {
-				String lsReq = request.getHeader("lsReq");
-				if (StringUtils.isEmpty(lsReq)) {
-					lsReq = request.getParameter("lsReq");
-				}
-				if(StringUtils.isEmpty(lsReq)){
-					lsReq = getValueFromCookie(request, "lsReq");
-				}
-				if (StringUtils.isEmpty(lsReq)) {
-					lsReq = "【" + UUID.randomUUID() + "_"
-							+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes()) + "】";
-				}
-				return lsReq;
-			}
-			/**
-			 * 从cookie取值
-			 * @param request
-			 * @param lsReq
-			 * @return
-			 */
-			private String getValueFromCookie(HttpServletRequest request, String lsReq) {
-				// 读取cookie
-			    Cookie[] cookies = request.getCookies();
-			    if (cookies != null) {
-			        // 遍历数组
-			        for (Cookie cookie : cookies) {
-			            if (cookie.getName().equals(lsReq)) {
-			                // 取出cookie的值
-			                String value = cookie.getValue();
-			                return value;
-			            }
-			        }
-			    }
-			    return null;
-			}
-
-			@Override
-			public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-					ModelAndView modelAndView) throws Exception {
-				MDC.remove("lsReq");
-			}
-
-		});
-	}
+	
 
 	/**
 	 * 判断是否是ip
