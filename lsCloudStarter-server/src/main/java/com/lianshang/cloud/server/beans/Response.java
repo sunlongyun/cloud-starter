@@ -1,6 +1,6 @@
-package com.lianshang.cloud.client.beans;
+package com.lianshang.cloud.server.beans;
 
-import com.lianshang.cloud.client.enums.ResponseCodeEnum;
+import com.lianshang.cloud.server.enums.ResponseCodeEnum;
 import java.io.Serializable;
 import lombok.Data;
 
@@ -16,12 +16,11 @@ public class Response implements Serializable{
 	private Object data;
 	private Response(String code, String msg, Object data){
 		this.code = code;
-
 		this.msg = msg;
 		this.data = data;
 	}
 	public static Response success(){
-		return success("操作成功");
+		return success(ResponseCodeEnum.SUCCESS.msg ());
 	}
 	public static Response success(String msg){
 		Response res = new Response(ResponseCodeEnum.SUCCESS.code(), msg, null);

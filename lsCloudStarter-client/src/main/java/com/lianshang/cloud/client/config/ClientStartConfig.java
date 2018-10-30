@@ -1,5 +1,7 @@
 package com.lianshang.cloud.client.config;
 
+import com.lianshang.cloud.client.beans.Response;
+import com.lianshang.cloud.client.enums.ResponseCodeEnum;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -164,22 +166,25 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				String paramsJson = JsonUtils.object2JsonString(postParameters);
 				HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
 
-				Object result = null;
+				Response response = null;
 				long start = System.currentTimeMillis();
 				try {
 					log.info("请求参数=>{}", paramsJson);
 					log.info("请求url=>{}", url);
 					log.info("lsReq==>{}", MDC.get("lsReq"));
 					url = url + "?lsReq=" + MDC.get("lsReq");
-					result = restTemplate.postForEntity(url, formEntity, Object.class).getBody();
+					response = restTemplate.postForEntity(url, formEntity, Response.class).getBody();
+					if(!ResponseCodeEnum.SUCCESS.code ().equals (response.getCode ())){
+						throw new RuntimeException (response.getMsg ());
+					}
 				} catch (Exception e) {
 					log.error("远程服务调用失败,{}", e.getMessage());
 					e.printStackTrace();
-					return null;
+					throw e;
 				} finally {
-					log.info("响应参数:【{}】,耗时:【{}】", result, (System.currentTimeMillis() - start) + "毫秒");
+					log.info("响应参数:【{}】,耗时:【{}】", response, (System.currentTimeMillis() - start) + "毫秒");
 				}
-				return handleResult(method, result);
+				return handleResult(method, response);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -220,10 +225,11 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	 * 处理返回结果
 	 *
 	 * @param method
-	 * @param result
+	 * @param response
 	 * @return
 	 */
-	private static Object handleResult(Method method, Object result) {
+	private static Object handleResult(Method method, Response response) {
+		Object result = response.getData ();
 		Type type = method.getGenericReturnType();
 		String returnTypeName = type.toString();
 		switch (returnTypeName) {

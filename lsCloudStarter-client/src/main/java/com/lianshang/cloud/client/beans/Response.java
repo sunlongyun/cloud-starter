@@ -1,9 +1,9 @@
-package flower.platform.commons;
+package com.lianshang.cloud.client.beans;
 
+import com.lianshang.cloud.client.enums.ResponseCodeEnum;
 import java.io.Serializable;
-
-import flower.platform.constant.ResponseCodeEnum;
 import lombok.Data;
+
 /**
  * 返回值
  * @author 孙龙云
@@ -16,6 +16,7 @@ public class Response implements Serializable{
 	private Object data;
 	private Response(String code, String msg, Object data){
 		this.code = code;
+
 		this.msg = msg;
 		this.data = data;
 	}

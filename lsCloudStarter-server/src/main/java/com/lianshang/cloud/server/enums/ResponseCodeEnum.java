@@ -1,4 +1,4 @@
-package com.lianshang.cloud.client.enums;
+package com.lianshang.cloud.server.enums;
 /**
  * 返回码
  * @author 孙龙云

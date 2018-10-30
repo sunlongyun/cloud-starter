@@ -1,5 +1,6 @@
 package com.lianshang.cloud.server.config;
 
+import com.lianshang.cloud.server.beans.Response;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,21 +67,21 @@ public class ServerStarterConfig
 		Object bean = cloudServiceMap.get(interfaceName);
 		if (bean == null) {
 			log.error("未找接口对应的bean==>{}", interfaceName);
-			throw new RuntimeException("未找接口对应的bea【" + interfaceName + "】");
+			return Response.fail ("未找接口对应的bea【" + interfaceName + "】");
 		}
 		Method[] methods = bean.getClass().getMethods();
 		try {
 			for (Method method : methods) {
 				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.length) {
 					Object value = method.invoke(bean, params);
-					return value;
+					return Response.success(value);
 				}
 			}
-			throw new RuntimeException("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
+			return Response.fail ("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 		} catch (Exception e) {
 			log.error("调用service失败,{}", e);
 			e.printStackTrace();
-			throw new RuntimeException("调用service失败【" + e.getMessage() + "】");
+			return Response.fail ("调用service失败【" + e.getMessage() + "】");
 		}
 	}
 
