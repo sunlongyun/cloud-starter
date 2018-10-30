@@ -70,7 +70,9 @@ public class SeriesLogsConfigRegistrar implements ImportBeanDefinitionRegistrar 
 						lsReq = UUID.randomUUID() + "_"
 								+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes());
 					}
-					lsReq = "【"+lsReq+"】";
+					if(!lsReq.startsWith ("【")){
+						lsReq = "【" + lsReq + "】";
+					}
 					return lsReq;
 				}
 				/**

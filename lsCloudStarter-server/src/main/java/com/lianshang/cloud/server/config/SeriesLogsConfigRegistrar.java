@@ -60,7 +60,7 @@ public class SeriesLogsConfigRegistrar implements ImportBeanDefinitionRegistrar 
 				private String getLsReq(HttpServletRequest request) {
 					String lsReq = request.getHeader(paramName);
 					if (StringUtils.isEmpty(lsReq)) {
-						lsReq = request.getParameter(paramName);
+						lsReq = request.getParameter("lsReq");
 					}
 					if(StringUtils.isEmpty(lsReq)){
 						lsReq = getValueFromCookie(request, paramName);
@@ -69,7 +69,9 @@ public class SeriesLogsConfigRegistrar implements ImportBeanDefinitionRegistrar 
 						lsReq =UUID.randomUUID() + "_"
 								+ CRC8Util.calcCrc8((System.currentTimeMillis() + "").getBytes());
 					}
-					lsReq = "【"+lsReq+"】";
+					if(!lsReq.startsWith ("【")){
+						lsReq = "【" + lsReq + "】";
+					}
 					return lsReq;
 				}
 				/**
