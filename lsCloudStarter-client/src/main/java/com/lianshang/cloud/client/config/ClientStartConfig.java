@@ -180,7 +180,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				} catch (Exception e) {
 					log.error("远程服务调用失败,{}", e.getMessage());
 					e.printStackTrace();
-					throw e;
+					throw new RuntimeException ("远程服务调用失败:"+e.getMessage());
 				} finally {
 					log.info("响应参数:【{}】,耗时:【{}】", response, (System.currentTimeMillis() - start) + "毫秒");
 				}

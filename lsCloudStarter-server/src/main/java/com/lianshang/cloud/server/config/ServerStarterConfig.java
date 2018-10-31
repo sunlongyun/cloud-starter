@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 import com.lianshang.cloud.server.annotation.LsCloudService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 /**
  * 服务提供方,配置管理
@@ -79,9 +80,13 @@ public class ServerStarterConfig
 			}
 			return Response.fail ("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 		} catch (Exception e) {
-			log.error("调用service失败,{}", e);
+			log.error("服务端service执行失败,{}", e);
 			e.printStackTrace();
-			return Response.fail ("调用service失败【" + e.getMessage() + "】");
+			String errorMsg = e.getMessage ();
+			if(StringUtils.isEmpty (errorMsg)){
+				errorMsg = e.getLocalizedMessage ();
+			}
+			return Response.fail ("调用service失败【" + errorMsg + "】");
 		}
 	}
 
