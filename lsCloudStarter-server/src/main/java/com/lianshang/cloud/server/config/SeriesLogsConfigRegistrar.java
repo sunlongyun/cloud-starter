@@ -1,12 +1,7 @@
 package com.lianshang.cloud.server.config;
 
-import java.util.Map;
-import java.util.UUID;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.lianshang.cloud.server.annotation.EnableSeriesLogs;
+import com.lianshang.cloud.server.utils.CRC8Util;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -18,8 +13,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.lianshang.cloud.server.annotation.EnableSeriesLogs;
-import com.lianshang.cloud.server.utils.CRC8Util;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+import java.util.UUID;
 
 public class SeriesLogsConfigRegistrar implements ImportBeanDefinitionRegistrar {
 
