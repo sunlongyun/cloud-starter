@@ -146,6 +146,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 			try {
 				String methodName = method.getName();
+
 				if (methodName.equals("toString")) {
 					return interfaceName;
 				}
@@ -184,7 +185,12 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				} finally {
 					log.info("响应参数:【{}】,耗时:【{}】", response, (System.currentTimeMillis() - start) + "毫秒");
 				}
-				return handleResult(method, response);
+
+				//完成目标类型的转换
+				Object targetResult =  handleResult(method, response);
+				String JsonResult =  JsonUtils.object2JsonString(targetResult);
+				return JsonUtils.json2Object(JsonResult, method.getReturnType());
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
