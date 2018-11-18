@@ -1,6 +1,5 @@
 package com.lianshang.cloud.server.config;
 
-import com.lianshang.cloud.server.beans.Response;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,14 +15,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.lianshang.cloud.server.annotation.LsCloudService;
+import com.lianshang.cloud.server.beans.Response;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
 
 /**
  * 服务提供方,配置管理
@@ -67,10 +65,12 @@ public class ServerStarterConfig
 	 * 回调服务提供者
 	 */
 	public static Object execute(String interfaceName, String methodName, Object... params) {
-		Object bean = cloudServiceMap.get(interfaceName);
+		
+		log.info("interfaceName=>{}",interfaceName);
+		Object bean = getBean( cloudServiceMap,interfaceName);
 		if (bean == null) {
 			log.error("未找接口对应的bean==>{}", interfaceName);
-			return Response.fail ("未找接口对应的bea【" + interfaceName + "】");
+			return Response.fail ("未找接口对应的bean【" + interfaceName + "】");
 		}
 		Method[] methods = bean.getClass().getMethods();
 		try {
@@ -92,6 +92,38 @@ public class ServerStarterConfig
 		}
 	}
 
+	private static Object getBean(Map<String, Object> cloudServiceMap, String interfaceName) {
+		Iterator<String> it = cloudServiceMap.keySet().iterator();
+		while(it.hasNext()){
+			String key = it.next();
+			Object bean = cloudServiceMap.get(key);
+			if(key.equals(interfaceName)){
+				return bean;
+			}
+			
+			Class<?> targetClass = bean.getClass();
+			
+			//还原真实实现类
+			if(targetClass.getName().contains("CGLIB")){
+				targetClass = targetClass.getSuperclass();
+			}
+			//获取接口 类
+			Class<?>[] interfaces = targetClass.getInterfaces();
+			for(Class<?> clzz : interfaces){
+				String clazzName = clzz.getName();
+				log.info("clzzName:{}, interfaceName:{}", clazzName, interfaceName);
+				if(null !=  targetClass && clazzName.equals(interfaceName)){
+					return bean;
+				}
+			}
+		}
+		return null;
+	}
+public static void main(String[] args) {
+	String x = "com.lianshang.cloth2.store.service.impl.ClothStoreServiceImpl$$EnhancerBySpringCGLIB$$1cc820dc";
+	String y = "com.lianshang.cloth2.store.service";
+	System.out.println(x.contains(y));
+}
 	/**
 	 * 返回api列表
 	 */
