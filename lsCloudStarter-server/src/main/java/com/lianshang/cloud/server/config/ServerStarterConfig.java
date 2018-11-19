@@ -45,7 +45,11 @@ public class ServerStarterConfig
 		if (!CollectionUtils.isEmpty(cloudServices)) {
 			Collection<?> values = cloudServices.values();
 			for (Object v : values) {
-				Class<?>[] inters = v.getClass().getInterfaces();
+				Class<?> targetClass = v.getClass();
+				if(targetClass.getName().contains("CGLIB")){
+					targetClass = targetClass.getSuperclass();
+				}
+				Class<?>[] inters = targetClass.getInterfaces();
 				for (Class inter : inters) {
 					if (inter.isInterface()) {
 						cloudServiceMap.put(v.getClass().getName(), v);
