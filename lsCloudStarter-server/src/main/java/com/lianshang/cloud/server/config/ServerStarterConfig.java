@@ -48,7 +48,7 @@ public class ServerStarterConfig
 				Class<?>[] inters = v.getClass().getInterfaces();
 				for (Class inter : inters) {
 					if (inter.isInterface()) {
-						cloudServiceMap.put(inter.getName(), v);
+						cloudServiceMap.put(v.getClass().getName(), v);
 					}
 				}
 			}
