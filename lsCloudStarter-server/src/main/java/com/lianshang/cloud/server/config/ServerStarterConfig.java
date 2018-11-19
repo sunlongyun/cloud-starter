@@ -1,13 +1,8 @@
 package com.lianshang.cloud.server.config;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.lianshang.cloud.server.annotation.LsCloudService;
+import com.lianshang.cloud.server.beans.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -18,10 +13,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.lianshang.cloud.server.annotation.LsCloudService;
-import com.lianshang.cloud.server.beans.Response;
-
-import lombok.extern.slf4j.Slf4j;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * 服务提供方,配置管理
@@ -51,9 +44,7 @@ public class ServerStarterConfig
 				}
 				Class<?>[] inters = targetClass.getInterfaces();
 				for (Class inter : inters) {
-					if (inter.isInterface()) {
-						cloudServiceMap.put(v.getClass().getName(), v);
-					}
+					cloudServiceMap.put(inter.getName(), v);
 				}
 			}
 		}
@@ -97,16 +88,16 @@ public class ServerStarterConfig
 	}
 
 	private static Object getBean(Map<String, Object> cloudServiceMap, String interfaceName) {
+		Object bean = cloudServiceMap.get(interfaceName);
+		if(null != bean){
+			return bean;
+		}
+
 		Iterator<String> it = cloudServiceMap.keySet().iterator();
 		while(it.hasNext()){
 			String key = it.next();
-			Object bean = cloudServiceMap.get(key);
-			if(key.equals(interfaceName)){
-				return bean;
-			}
-			
+			bean = cloudServiceMap.get(key);
 			Class<?> targetClass = bean.getClass();
-			
 			//还原真实实现类
 			if(targetClass.getName().contains("CGLIB")){
 				targetClass = targetClass.getSuperclass();
