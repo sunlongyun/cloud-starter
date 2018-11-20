@@ -5,7 +5,7 @@ package com.lianshang.cloud.server.enums;
  *
  */
 public enum ResponseCodeEnum {
-	SUCCESS("0000", "成功"), 
+	SUCCESS("200", "成功"),
 	FAIL("9999", "失败");
 	private String code;
 	private String msg;
