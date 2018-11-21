@@ -78,7 +78,7 @@ public class ServerStarterConfig
 					for (int i = 0; i < len; i++) {
 						targetParams[i] = JsonUtils.json2Object(JsonUtils.object2JsonString(params[i]), method.getParameterTypes()[i]);
 					}
-					Object value = method.invoke(bean, params);
+					Object value = method.invoke(bean, targetParams);
 					return Response.success(value);
 				}
 			}
