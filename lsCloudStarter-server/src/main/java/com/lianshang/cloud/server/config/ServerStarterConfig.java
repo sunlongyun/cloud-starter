@@ -73,10 +73,12 @@ public class ServerStarterConfig
 			for (Method method : methods) {
 				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.length) {
 					Object[] targetParams = new Object[params.length];
-					String paramsJson = JsonUtils.object2JsonString(params);
 					int len = method.getParameterTypes().length;
+					Class<?>[] paramsTypes = method.getParameterTypes();
+
 					for (int i = 0; i < len; i++) {
-						targetParams[i] = JsonUtils.json2Object(JsonUtils.object2JsonString(params[i]), method.getParameterTypes()[i]);
+						String paramJson = JsonUtils.object2JsonString(params[i]);
+						targetParams[i] = JsonUtils.json2Object(paramJson, paramsTypes[i]);
 					}
 					Object value = method.invoke(bean, targetParams);
 					return Response.success(value);
