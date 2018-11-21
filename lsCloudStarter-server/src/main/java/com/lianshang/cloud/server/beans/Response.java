@@ -13,9 +13,10 @@ import lombok.Data;
 public class Response implements Serializable {
 
   private static final long serialVersionUID = -7096601129585145021L;
-  private String code;
-  private String msg;
-  private Object data;
+  private String code = ResponseCodeEnum.SUCCESS.code();
+  private String msg = ResponseCodeEnum.SUCCESS.msg();
+  private Object data = new Serializable() {
+  };
 
   private Response(String code, String msg, Object data) {
     this.code = code;
