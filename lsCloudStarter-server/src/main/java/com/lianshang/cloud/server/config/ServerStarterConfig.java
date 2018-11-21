@@ -2,6 +2,7 @@ package com.lianshang.cloud.server.config;
 
 import com.lianshang.cloud.server.annotation.LsCloudService;
 import com.lianshang.cloud.server.beans.Response;
+import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -71,6 +72,12 @@ public class ServerStarterConfig
 		try {
 			for (Method method : methods) {
 				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.length) {
+					Object[] targetParams = new Object[params.length];
+					String paramsJson = JsonUtils.object2JsonString(params);
+					int len = method.getParameterTypes().length;
+					for (int i = 0; i < len; i++) {
+						targetParams[i] = JsonUtils.json2Object(JsonUtils.object2JsonString(params[i]), method.getParameterTypes()[i]);
+					}
 					Object value = method.invoke(bean, params);
 					return Response.success(value);
 				}
