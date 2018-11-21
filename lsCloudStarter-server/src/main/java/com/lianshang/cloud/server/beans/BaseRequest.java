@@ -12,5 +12,5 @@ public class BaseRequest implements Serializable {
   private String interfaceName;
   private String methodName;
   private List<String> paramTypeNames;
-  private List<LinkedHashMap> params;
+  private List<Object> params;
 }

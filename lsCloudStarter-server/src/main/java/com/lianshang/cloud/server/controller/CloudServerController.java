@@ -73,18 +73,18 @@ public class CloudServerController {
       paramTypeNameList = new ArrayList<>();
     }
 
-    List<LinkedHashMap> linkedHashMaps = baseRequest.getParams();
-    if (linkedHashMaps == null) {
-      linkedHashMaps = new ArrayList<>();
+    List<Object> valueParams = baseRequest.getParams();
+    if (valueParams == null) {
+      valueParams = new ArrayList<>();
     }
     int len = paramTypeNameList.size();
 
     try {
 
       for (int i = 0; i < len; i++) {
-        LinkedHashMap map = linkedHashMaps.get(i);
+        Object object = valueParams.get(i);
         String typeName = paramTypeNameList.get(i);
-        String jsonValue = JsonUtils.object2JsonString(map);
+        String jsonValue = JsonUtils.object2JsonString(object);
 
         Class paramType = Class.forName(typeName);
         Object obj = JsonUtils.json2Object(jsonValue, paramType);
