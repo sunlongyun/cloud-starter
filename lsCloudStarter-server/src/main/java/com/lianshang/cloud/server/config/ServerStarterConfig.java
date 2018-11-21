@@ -2,7 +2,6 @@ package com.lianshang.cloud.server.config;
 
 import com.lianshang.cloud.server.annotation.LsCloudService;
 import com.lianshang.cloud.server.beans.Response;
-import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -60,7 +59,7 @@ public class ServerStarterConfig
 	/**
 	 * 回调服务提供者
 	 */
-	public static Object execute(String interfaceName, String methodName, Object... params) {
+	public static Object execute(String interfaceName, String methodName, List<Object> params) {
 		
 		log.info("interfaceName=>{}",interfaceName);
 		Object bean = getBean( cloudServiceMap,interfaceName);
@@ -68,18 +67,15 @@ public class ServerStarterConfig
 			log.error("未找接口对应的bean==>{}", interfaceName);
 			return Response.fail ("未找接口对应的bean【" + interfaceName + "】");
 		}
-		Method[] methods = bean.getClass().getMethods();
+		Class<?> clzz = bean.getClass();
+		Method[] methods = clzz.getMethods();
 		try {
-			for (Method method : methods) {
-				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.length) {
-					Object[] targetParams = new Object[params.length];
-					int len = method.getParameterTypes().length;
-					Class<?>[] paramsTypes = method.getParameterTypes();
+			Object[] targetParams = new Object[params.size()];
+			ArrayList<Object> arrayList = (ArrayList<Object>) params;
+			arrayList.toArray(targetParams);
 
-					for (int i = 0; i < len; i++) {
-						String paramJson = JsonUtils.object2JsonString(params[i]);
-						targetParams[i] = JsonUtils.json2Object(paramJson, paramsTypes[i]);
-					}
+			for (Method method : methods) {
+				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.size()) {
 					Object value = method.invoke(bean, targetParams);
 					return Response.success(value);
 				}
@@ -94,6 +90,33 @@ public class ServerStarterConfig
 			}
 			return Response.fail ("调用service失败【" + errorMsg + "】");
 		}
+	}
+
+	/**
+	 * 查询函数对象
+	 *
+	 * @param interClzz
+	 * @param methodName
+	 * @return
+	 */
+	private static Method getMethod(Class<?> interClzz, String methodName) {
+		Method[] methods = interClzz.getDeclaredMethods();
+		if (null != methods) {
+			for (Method m : methods) {
+				if (m.getName().equals(methodName)) {
+					return m;
+				}
+			}
+		}
+		methods = interClzz.getInterfaces()[0].getDeclaredMethods();
+		if (null != methods) {
+			for (Method m : methods) {
+				if (m.getName().equals(methodName)) {
+					return m;
+				}
+			}
+		}
+		return null;
 	}
 
 	private static Object getBean(Map<String, Object> cloudServiceMap, String interfaceName) {

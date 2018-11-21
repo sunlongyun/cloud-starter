@@ -1,21 +1,22 @@
 package com.lianshang.cloud.server.controller;
 
+import com.lianshang.cloud.server.beans.BaseRequest;
 import com.lianshang.cloud.server.beans.Response;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.lianshang.cloud.server.config.ServerStarterConfig;
+import com.lianshang.cloud.server.utils.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.lianshang.cloud.server.beans.BaseRequest;
-import com.lianshang.cloud.server.config.ServerStarterConfig;
-
-import lombok.extern.slf4j.Slf4j;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @ConditionalOnMissingBean(CloudServerController.class)
 @RequestMapping("/lsCloud")
@@ -30,7 +31,7 @@ public class CloudServerController {
   public Object execute(@RequestBody BaseRequest baseRequest, HttpServletRequest request) {
 
     if (null == baseRequest || StringUtils.isEmpty (baseRequest.getMethodName ())
-        || StringUtils.isEmpty (baseRequest.getInterfaceName ())) {
+      || StringUtils.isEmpty (baseRequest.getInterfaceName ())) {
       log.error ("请求参数都不能为空");
       return Response.fail ("请求参数都不能为空");
     } else {
@@ -38,8 +39,10 @@ public class CloudServerController {
       long start = System.currentTimeMillis ();
       try {
         log.info ("请求参数==>{}", baseRequest);
+        List<Object> params = getPrams(baseRequest);
+
         target = ServerStarterConfig.execute (baseRequest.getInterfaceName (),
-            baseRequest.getMethodName (), baseRequest.getParams ());
+          baseRequest.getMethodName(),  params);
         if(null == target){
           throw new RuntimeException("服务请求异常");
         }
@@ -51,6 +54,75 @@ public class CloudServerController {
       }
       return target;
     }
+  }
+
+  /**
+   * 获取真实对象
+   *
+   * @param baseRequest
+   * @return
+   * @throws ClassNotFoundException
+   * @throws InstantiationException
+   * @throws IllegalAccessException
+   */
+  private List<Object> getPrams(@RequestBody BaseRequest baseRequest) {
+    List<Object> params = new ArrayList<>();
+    //参数转换回来
+    List<String> paramTypeNameList = baseRequest.getParamTypeNames();
+    if (null == paramTypeNameList) {
+      paramTypeNameList = new ArrayList<>();
+    }
+
+    List<LinkedHashMap> linkedHashMaps = baseRequest.getParams();
+    if (linkedHashMaps == null) {
+      linkedHashMaps = new ArrayList<>();
+    }
+    int len = paramTypeNameList.size();
+
+    try {
+
+      for (int i = 0; i < len; i++) {
+        LinkedHashMap map = linkedHashMaps.get(i);
+        String typeName = paramTypeNameList.get(i);
+        String jsonValue = JsonUtils.object2JsonString(map);
+
+        Class paramType = Class.forName(typeName);
+        Object obj = JsonUtils.json2Object(jsonValue, paramType);
+        params.add(obj);
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    return params;
+  }
+
+  /**
+   * 获取对象
+   *
+   * @param linkedHashMaps
+   * @param index
+   * @param clzz
+   * @return
+   * @throws InstantiationException
+   * @throws IllegalAccessException
+   */
+  private Object getObj(List<LinkedHashMap> linkedHashMaps, int index, Class clzz) throws InstantiationException, IllegalAccessException {
+    Object object = clzz.newInstance();
+    Field[] fields = clzz.getDeclaredFields();
+
+    if (null != fields) {
+      LinkedHashMap linkedHashMap = linkedHashMaps.get(index);
+      for (Field field : fields) {
+        String fName = field.getName();
+        Object value = linkedHashMap.get(fName);
+        field.setAccessible(true);
+        field.set(object, value);
+        field.setAccessible(false);
+      }
+    }
+
+    return object;
   }
 
   /**

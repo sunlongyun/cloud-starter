@@ -1,14 +1,13 @@
 package com.lianshang.cloud.client.config;
 
+import com.lianshang.cloud.client.annotation.LsCloudAutowired;
 import com.lianshang.cloud.client.beans.Response;
 import com.lianshang.cloud.client.enums.ResponseCodeEnum;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-
+import com.lianshang.cloud.client.utils.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -26,13 +25,11 @@ import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
 
-import com.lianshang.cloud.client.annotation.LsCloudAutowired;
-import com.lianshang.cloud.client.utils.JsonUtils;
-
-import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * 服务消费者配置管理
@@ -157,8 +154,16 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				Map<String, Object> postParameters = new HashMap<>();
 				postParameters.put("methodName", methodName);
 				postParameters.put("interfaceName", interfaceName);
-				postParameters.put("params", args);
 
+				if(null == args) args = new Object[0];
+				List<String> paramTypeNames = new ArrayList<>();
+
+				for(Object arg : args){
+					paramTypeNames.add(arg.getClass().getName());
+				}
+
+				postParameters.put("params", Arrays.asList(args));
+				postParameters.put("paramTypeNames",paramTypeNames);
 				HttpHeaders headers = new HttpHeaders();
 				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
 				headers.setContentType(mediaType);
