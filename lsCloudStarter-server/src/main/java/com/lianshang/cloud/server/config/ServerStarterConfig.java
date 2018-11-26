@@ -27,7 +27,9 @@ public class ServerStarterConfig
 
 	private ApplicationContext applicationContext;
 	private static Map<String, Object> cloudServiceMap = new HashMap<>();
-
+	ServerStarterConfig(){
+		log.info("初始化-------------");
+	}
 	/**
 	 * 保存服务发布者的bean
 	 */

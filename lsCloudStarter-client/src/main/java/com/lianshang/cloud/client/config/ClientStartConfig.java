@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -18,6 +19,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -38,6 +40,7 @@ import java.util.regex.Pattern;
 @EnableEurekaClient
 @EnableDiscoveryClient
 @ConditionalOnMissingBean(ClientStartConfig.class)
+@Order(1000)
 public class ClientStartConfig implements ApplicationContextAware, BeanPostProcessor {
 
 	public static final String CLOUD_CLIENT_TEMPLATE = "serverNameRestTemplate";
@@ -54,18 +57,22 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	/**
 	 * 创建 RestTemplate
 	 */
-	@Bean("serverNameRestTemplate")
+	@Bean(CLOUD_CLIENT_TEMPLATE)
 	@LoadBalanced
-	@Order(Integer.MAX_VALUE)
+	@ConditionalOnMissingBean(name = CLOUD_CLIENT_TEMPLATE)
 	RestTemplate serviceNameTemplate() {
 		return new RestTemplate();
 	}
 
+
+	ClientStartConfig() {
+		log.info("ClientStartConfig===>初始化-------");
+	}
 	/**
 	 * 创建 RestTemplate
 	 */
-	@Bean("urlNameRestTemplate")
-	@Order(Integer.MAX_VALUE)
+	@Bean(URL_CLIENT_TEMPLATE)
+	@ConditionalOnMissingBean(name = URL_CLIENT_TEMPLATE)
 	RestTemplate urlNameRestTemplate() {
 		return new RestTemplate();
 	}
@@ -87,7 +94,12 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	 * @param targetBean
 	 */
 	private void setFieldIfNecessary(Object targetBean) {
-		Field[] fields = targetBean.getClass().getDeclaredFields();
+		Class targetClzz = targetBean.getClass();
+		if (targetClzz.getName().contains("CGLIB")
+		|| targetClzz.getName().contains("@")) {
+			targetClzz = targetClzz.getSuperclass();
+		}
+		Field[] fields = targetClzz.getDeclaredFields();
 		for (Field f : fields) {
 			LsCloudAutowired lsCloudAutowired = f.getAnnotation(LsCloudAutowired.class);
 			if (null != lsCloudAutowired) {
@@ -159,7 +171,11 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				List<String> paramTypeNames = new ArrayList<>();
 
 				for(Object arg : args){
-					paramTypeNames.add(arg.getClass().getName());
+					String className = Object.class.getName();
+					if(null != arg){
+						className = arg.getClass().getName();;
+					}
+					paramTypeNames.add(className);
 				}
 
 				postParameters.put("params", Arrays.asList(args));
