@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -19,7 +18,6 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -156,6 +154,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			try {
 				String methodName = method.getName();
 
+				Type getbericTeturnType = method.getGenericReturnType();
+				log.info("getbericTeturnType=>{}", getbericTeturnType);
 				if (methodName.equals("toString")) {
 					return interfaceName;
 				}
@@ -169,13 +169,11 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 				if(null == args) args = new Object[0];
 				List<String> paramTypeNames = new ArrayList<>();
+				Class<?>[] parameterTypes = method.getParameterTypes();
 
-				for(Object arg : args){
-					String className = Object.class.getName();
-					if(null != arg){
-						className = arg.getClass().getName();;
-					}
-					paramTypeNames.add(className);
+				for (Class<?> paramsType : parameterTypes) {
+
+					paramTypeNames.add(paramsType.getName());
 				}
 
 				postParameters.put("params", Arrays.asList(args));
@@ -210,7 +208,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				//完成目标类型的转换
 				Object targetResult =  handleResult(method, response);
 				String JsonResult =  JsonUtils.object2JsonString(targetResult);
-				return JsonUtils.json2Object(JsonResult, method.getReturnType());
+				return JsonUtils.json2Object(JsonResult, getbericTeturnType);
 
 			} catch (Exception e) {
 				e.printStackTrace();

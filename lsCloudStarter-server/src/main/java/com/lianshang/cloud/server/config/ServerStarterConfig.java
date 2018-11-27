@@ -61,7 +61,7 @@ public class ServerStarterConfig
 	/**
 	 * 回调服务提供者
 	 */
-	public static Object execute(String interfaceName, String methodName, List<Object> params) {
+	public static Object execute(String interfaceName, String methodName, List<Object> params, List<String> paramTypeNameList) {
 		
 		log.info("interfaceName=>{}",interfaceName);
 		Object bean = getBean( cloudServiceMap,interfaceName);
@@ -69,20 +69,30 @@ public class ServerStarterConfig
 			log.error("未找接口对应的bean==>{}", interfaceName);
 			return Response.fail ("未找接口对应的bean【" + interfaceName + "】");
 		}
-		Class<?> clzz = bean.getClass();
-		Method[] methods = clzz.getMethods();
+
+
 		try {
+			Class<?> beanClass = bean.getClass();
+
 			Object[] targetParams = new Object[params.size()];
 			ArrayList<Object> arrayList = (ArrayList<Object>) params;
 			arrayList.toArray(targetParams);
-
-			for (Method method : methods) {
-				if (method.getName().equals(methodName) && method.getParameterTypes().length == params.size()) {
-					Object value = method.invoke(bean, targetParams);
-					return Response.success(value);
-				}
+			ArrayList<Class<?>> paramTypes = new ArrayList<>();
+			Class<?>[] paramTypeArray = new Class<?>[paramTypeNameList.size()];
+			for (String paramType : paramTypeNameList) {
+				paramTypes.add(Class.forName(paramType));
 			}
-			return Response.fail ("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
+			paramTypes.toArray(paramTypeArray);
+
+			Method method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
+
+			if (null == method) {
+				return Response.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
+			}
+
+			Object value = method.invoke(bean, targetParams);
+			return Response.success(value);
+
 		} catch (Exception e) {
 			log.error("服务端service执行失败,{}", e);
 			e.printStackTrace();

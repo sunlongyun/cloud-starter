@@ -6,6 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * direct=true或者value是ip地址,那么直接连接.
+ * 否则,根据value填写的服务地址,调用springCloud的负载均衡
+ */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -18,7 +22,7 @@ public @interface LsCloudAutowired {
     public String value();
 
     /**
-     * 知否是直连
+     * 是否是直连
      * @return
      */
     public boolean direct() default  false;

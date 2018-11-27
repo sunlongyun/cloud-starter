@@ -40,9 +40,12 @@ public class CloudServerController {
       try {
         log.info ("请求参数==>{}", baseRequest);
         List<Object> params = getPrams(baseRequest);
-
+        List<String> paramTypeNameList = baseRequest.getParamTypeNames();
+        if(null == paramTypeNameList){
+          paramTypeNameList = new ArrayList<>();
+        }
         target = ServerStarterConfig.execute (baseRequest.getInterfaceName (),
-          baseRequest.getMethodName(),  params);
+          baseRequest.getMethodName(),  params, paramTypeNameList);
         if(null == target){
           throw new RuntimeException("服务请求异常");
         }
