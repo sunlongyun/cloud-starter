@@ -77,12 +77,13 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 	@Nullable
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		setFieldIfNecessary(bean);
 		return bean;
 	}
 
 	@Nullable
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		setFieldIfNecessary(bean);
+		//setFieldIfNecessary(bean);
 		return bean;
 	}
 
