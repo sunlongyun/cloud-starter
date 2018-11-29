@@ -28,7 +28,7 @@ public class ServerStarterConfig
 	private ApplicationContext applicationContext;
 	private static Map<String, Object> cloudServiceMap = new HashMap<>();
 	ServerStarterConfig(){
-		log.info("初始化-------------");
+		log.info("serverStarter初始化-------------");
 	}
 	/**
 	 * 保存服务发布者的bean
@@ -94,13 +94,21 @@ public class ServerStarterConfig
 			return Response.success(value);
 
 		} catch (Exception e) {
-			log.error("服务端service执行失败,{}", e);
-			e.printStackTrace();
+
+			log.error("服务端service执行失败:", e);
+
 			String errorMsg = e.getMessage ();
 			if(StringUtils.isEmpty (errorMsg)){
-				errorMsg = e.getLocalizedMessage ();
+				Throwable throwable = e.getCause();
+				errorMsg = throwable.getMessage();
 			}
-			return Response.fail ("调用service失败【" + errorMsg + "】");
+			if (StringUtils.isEmpty(errorMsg)) {
+				errorMsg = "远程服务调用失败,请联系管理员--serverStarter";
+			}
+
+			e.printStackTrace();
+
+			return Response.fail(errorMsg);
 		}
 	}
 

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -64,7 +65,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 
 	ClientStartConfig() {
-		log.info("ClientStartConfig===>初始化-------");
+		log.info("ClientStarter===>初始化-------");
 	}
 	/**
 	 * 创建 RestTemplate
@@ -152,11 +153,9 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 		public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 
-			try {
 				String methodName = method.getName();
 
 				Type getbericTeturnType = method.getGenericReturnType();
-				log.info("getbericTeturnType=>{}", getbericTeturnType);
 				if (methodName.equals("toString")) {
 					return interfaceName;
 				}
@@ -199,9 +198,19 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 						throw new RuntimeException (response.getMsg ());
 					}
 				} catch (Exception e) {
-					log.error("远程服务调用失败,{}", e.getMessage());
 					e.printStackTrace();
-					throw new RuntimeException ("远程服务调用失败:"+e.getMessage());
+					String errorMsg = e.getMessage();
+					if (StringUtils.isEmpty(errorMsg)) {
+						Throwable throwable = e.getCause();
+						if (null != throwable) {
+							errorMsg = throwable.getMessage();
+						}
+					}
+					if (StringUtils.isEmpty(errorMsg)) {
+						errorMsg = "远程服务请求失败,请联系管理员--cllientStarter";
+					}
+					log.error("远程服务调用失败:{}", errorMsg);
+					throw new RuntimeException(errorMsg);
 				} finally {
 					log.info("响应参数:【{}】,耗时:【{}】", response, (System.currentTimeMillis() - start) + "毫秒");
 				}
@@ -210,11 +219,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				Object targetResult =  handleResult(method, response);
 				String JsonResult =  JsonUtils.object2JsonString(targetResult);
 				return JsonUtils.json2Object(JsonResult, getbericTeturnType);
-
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
 		}
 
 		private RestTemplate getRestTemplate() {
