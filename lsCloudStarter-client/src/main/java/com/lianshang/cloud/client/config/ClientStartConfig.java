@@ -171,9 +171,14 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				List<String> paramTypeNames = new ArrayList<>();
 				Class<?>[] parameterTypes = method.getParameterTypes();
 
+			     int i = 0;
 				for (Class<?> paramsType : parameterTypes) {
-
-					paramTypeNames.add(paramsType.getName());
+					i++;
+					String paramTypeName = paramsType.getName();
+					if (paramsType == Object.class) {
+						paramTypeName =args[i].getClass().getName();
+					}
+					paramTypeNames.add(paramTypeName);
 				}
 
 				postParameters.put("params", Arrays.asList(args));
