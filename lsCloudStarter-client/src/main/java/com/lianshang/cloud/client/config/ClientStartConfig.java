@@ -173,7 +173,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 			     int i = 0;
 				for (Class<?> paramsType : parameterTypes) {
-
 					String paramTypeName = paramsType.getName();
 					if (paramsType == Object.class) {
 						paramTypeName =args[i].getClass().getName();
