@@ -84,8 +84,15 @@ public class ServerStarterConfig
 			}
 			paramTypes.toArray(paramTypeArray);
 
-			Method method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
+			Method method = null;
+			try {
+				method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
+			} catch (Exception e) {
 
+			}
+			if (null == method) {
+				method = beanClass.getDeclaredMethod(methodName, Object.class);
+			}
 			if (null == method) {
 				return Response.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 			}
