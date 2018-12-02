@@ -92,10 +92,18 @@ public class ServerStarterConfig
 
 			}
 			if (null == method) {
-				method = beanClass.getDeclaredMethod(methodName, Serializable.class);
+				try {
+					method = beanClass.getDeclaredMethod(methodName, Object.class);
+				} catch (Exception e) {
+
+				}
 			}
 			if (null == method) {
-				method = beanClass.getDeclaredMethod(methodName, Object.class);
+				try {
+					method = beanClass.getDeclaredMethod(methodName, Serializable.class);
+				} catch (Exception e) {
+
+				}
 			}
 			if (null == method) {
 				return Response.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
