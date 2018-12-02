@@ -71,26 +71,42 @@ public class CloudServerController {
   private List<Object> getPrams(@RequestBody BaseRequest baseRequest) {
     List<Object> params = new ArrayList<>();
     //参数转换回来
-    List<String> paramTypeNameList = baseRequest.getParamTypeNames();
-    if (null == paramTypeNameList) {
-      paramTypeNameList = new ArrayList<>();
-    }
+    List<String> realParamTypeName = baseRequest.getParamTypeNames();
+    //父类参数类型,处理代理类
+    List<String> parentParamTypeName =  baseRequest.getParamsParamTypeNames();
 
+    if (null == realParamTypeName) {
+      realParamTypeName = new ArrayList<>();
+    }
+    if(null == parentParamTypeName){
+      parentParamTypeName = new ArrayList<>();
+    }
     List<Object> valueParams = baseRequest.getParams();
     if (valueParams == null) {
       valueParams = new ArrayList<>();
     }
-    int len = paramTypeNameList.size();
+    int len = realParamTypeName.size();
 
     try {
 
       for (int i = 0; i < len; i++) {
         Object object = valueParams.get(i);
-        String typeName = paramTypeNameList.get(i);
+        String typeName = realParamTypeName.get(i);
         String jsonValue = JsonUtils.object2JsonString(object);
 
         Class paramType = Class.forName(typeName);
-        Object obj = JsonUtils.json2Object(jsonValue, paramType);
+        Object obj = null;
+        try {
+          obj = JsonUtils.json2Object(jsonValue, paramType);
+          if(null == obj){
+            String parentTypeName  =  parentParamTypeName.get(i);
+            paramType = Class.forName(parentTypeName);
+            obj = JsonUtils.json2Object(jsonValue, paramType);
+          }
+        } catch (Exception ex) {
+
+        }
+
         params.add(obj);
       }
     } catch (Exception ex) {
