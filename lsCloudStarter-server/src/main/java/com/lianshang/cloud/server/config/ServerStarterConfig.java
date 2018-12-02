@@ -13,7 +13,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -86,25 +85,7 @@ public class ServerStarterConfig
 			paramTypes.toArray(paramTypeArray);
 
 			Method method = null;
-			try {
-				method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
-			} catch (Exception e) {
-
-			}
-			if (null == method) {
-				try {
-					method = beanClass.getDeclaredMethod(methodName, Object.class);
-				} catch (Exception e) {
-
-				}
-			}
-			if (null == method) {
-				try {
-					method = beanClass.getDeclaredMethod(methodName, Serializable.class);
-				} catch (Exception e) {
-
-				}
-			}
+			method = getMethod(methodName, beanClass, paramTypeArray, method);
 			if (null == method) {
 				return Response.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 			}
@@ -129,6 +110,33 @@ public class ServerStarterConfig
 
 			return Response.fail(errorMsg);
 		}
+	}
+
+	private static Method getMethod(String methodName, Class<?> beanClass, Class<?>[] paramTypeArray, Method method) {
+		try {
+            method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
+        } catch (Exception e) {
+
+        }
+		if (null == method) {
+            try {
+                method = beanClass.getDeclaredMethod(methodName, Object.class);
+            } catch (Exception e) {
+
+            }
+        }
+		if (null == method) {
+            Method[] methods = beanClass.getDeclaredMethods();
+            if (null != methods) {
+                for (Method m : methods) {
+                    if (m.getName().equals(methodName)) {
+                        method = m;
+                        break;
+                    }
+                }
+            }
+        }
+		return method;
 	}
 
 	/**

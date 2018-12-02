@@ -168,21 +168,25 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				postParameters.put("interfaceName", interfaceName);
 
 				if(null == args) args = new Object[0];
-				List<String> paramTypeNames = new ArrayList<>();
+				List<String> realTypeName = new ArrayList<>();
 				Class<?>[] parameterTypes = method.getParameterTypes();
 
-			     int i = 0;
-				for (Class<?> paramsType : parameterTypes) {
-					String paramTypeName = paramsType.getName();
-					if (paramsType == Object.class) {
-						paramTypeName =args[i].getClass().getName();
-					}
-					paramTypeNames.add(paramTypeName);
-					i++;
+				int len = args.length;
+				for (int i = 0; i < len; i++) {
+					String argName = args[i].getClass().getName();
+					realTypeName.add(argName);
 				}
 
+
+				List<String> paramsParamTypeNames = new ArrayList<>();
+				for(Class superType : parameterTypes){
+					paramsParamTypeNames.add(superType.getName());
+				}
 				postParameters.put("params", Arrays.asList(args));
-				postParameters.put("paramTypeNames",paramTypeNames);
+				postParameters.put("paramTypeNames", realTypeName);
+
+				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
+				
 				HttpHeaders headers = new HttpHeaders();
 				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
 				headers.setContentType(mediaType);
