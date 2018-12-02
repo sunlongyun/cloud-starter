@@ -13,6 +13,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -89,6 +90,9 @@ public class ServerStarterConfig
 				method = beanClass.getDeclaredMethod(methodName, paramTypeArray);
 			} catch (Exception e) {
 
+			}
+			if (null == method) {
+				method = beanClass.getDeclaredMethod(methodName, Serializable.class);
 			}
 			if (null == method) {
 				method = beanClass.getDeclaredMethod(methodName, Object.class);
