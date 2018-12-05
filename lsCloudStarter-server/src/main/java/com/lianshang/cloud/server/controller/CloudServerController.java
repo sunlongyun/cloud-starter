@@ -27,7 +27,7 @@ public class CloudServerController {
    * 目标bean
    */
   @ResponseBody
-  @RequestMapping("/execute")
+  @RequestMapping(value = "/execute", produces = "application/json")
   public Object execute(@RequestBody BaseRequest baseRequest, HttpServletRequest request) {
 
     if (null == baseRequest || StringUtils.isEmpty (baseRequest.getMethodName ())
