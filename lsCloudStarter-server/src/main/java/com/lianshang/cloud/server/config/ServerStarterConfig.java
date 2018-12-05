@@ -1,7 +1,7 @@
 package com.lianshang.cloud.server.config;
 
 import com.lianshang.cloud.server.annotation.LsCloudService;
-import com.lianshang.cloud.server.beans.Response;
+import com.lianshang.cloud.server.beans.LsCloudResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -67,10 +67,10 @@ public class ServerStarterConfig
 		Object bean = getBean( cloudServiceMap,interfaceName);
 		if (bean == null) {
 			log.error("未找接口对应的bean==>{}", interfaceName);
-			return Response.fail ("未找接口对应的bean【" + interfaceName + "】");
+			return LsCloudResponse.fail("未找接口对应的bean【" + interfaceName + "】");
 		}
 
-
+		String returnTypeName = null;
 		try {
 			Class<?> beanClass = bean.getClass();
 
@@ -87,11 +87,11 @@ public class ServerStarterConfig
 			Method method = null;
 			method = getMethod(methodName, beanClass, paramTypeArray, method);
 			if (null == method) {
-				return Response.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
+				return LsCloudResponse.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 			}
-
+			returnTypeName = method.getGenericReturnType().getTypeName();
 			Object value = method.invoke(bean, targetParams);
-			return Response.success(value);
+			return LsCloudResponse.success(returnTypeName, value);
 
 		} catch (Exception e) {
 
@@ -108,7 +108,7 @@ public class ServerStarterConfig
 
 			e.printStackTrace();
 
-			return Response.fail(errorMsg);
+			return LsCloudResponse.fail(returnTypeName, errorMsg);
 		}
 	}
 

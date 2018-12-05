@@ -1,7 +1,7 @@
 package com.lianshang.cloud.server.controller;
 
 import com.lianshang.cloud.server.beans.BaseRequest;
-import com.lianshang.cloud.server.beans.Response;
+import com.lianshang.cloud.server.beans.LsCloudResponse;
 import com.lianshang.cloud.server.config.ServerStarterConfig;
 import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class CloudServerController {
     if (null == baseRequest || StringUtils.isEmpty (baseRequest.getMethodName ())
       || StringUtils.isEmpty (baseRequest.getInterfaceName ())) {
       log.error ("请求参数都不能为空");
-      return Response.fail ("请求参数都不能为空");
+      return LsCloudResponse.fail ("请求参数都不能为空");
     } else {
       Object target = null;
       long start = System.currentTimeMillis ();
@@ -51,7 +51,7 @@ public class CloudServerController {
         }
       } catch (Exception e) {
         log.error ("服务异常,", e);
-        return Response.fail ("服务异常:" + e.getMessage ());
+        return LsCloudResponse.fail ("服务异常:" + e.getMessage ());
       } finally {
         log.info ("响应参数==>【{}】,耗时==》【{}】", target, (System.currentTimeMillis () - start) + "毫秒");
       }

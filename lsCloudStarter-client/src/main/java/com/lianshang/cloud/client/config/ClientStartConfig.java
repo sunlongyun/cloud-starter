@@ -1,7 +1,7 @@
 package com.lianshang.cloud.client.config;
 
 import com.lianshang.cloud.client.annotation.LsCloudAutowired;
-import com.lianshang.cloud.client.beans.Response;
+import com.lianshang.cloud.client.beans.LsCloudResponse;
 import com.lianshang.cloud.client.enums.ResponseCodeEnum;
 import com.lianshang.cloud.client.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +155,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 				String methodName = method.getName();
 
-				Type getbericTeturnType = method.getGenericReturnType();
 				if (methodName.equals("toString")) {
 					return interfaceName;
 				}
@@ -195,16 +194,16 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				String paramsJson = JsonUtils.object2JsonString(postParameters);
 				HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
 
-				Response response = null;
+			    LsCloudResponse lsCloudResponse = null;
 				long start = System.currentTimeMillis();
 				try {
 					log.info("请求参数=>{}", paramsJson);
 					log.info("请求url=>{}", url);
 					log.info("lsReq==>{}", MDC.get("lsReq"));
 					url = url + "?lsReq=" + MDC.get("lsReq");
-					response = restTemplate.postForEntity(url, formEntity, Response.class).getBody();
-					if(!ResponseCodeEnum.SUCCESS.code ().equals (response.getCode ())){
-						throw new RuntimeException (response.getMsg ());
+					lsCloudResponse = restTemplate.postForEntity(url, formEntity, LsCloudResponse.class).getBody();
+					if (!ResponseCodeEnum.SUCCESS.code().equals(lsCloudResponse.getCode())) {
+						throw new RuntimeException(lsCloudResponse.getMsg());
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -221,13 +220,18 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 					log.error("远程服务调用失败:{}", errorMsg);
 					throw new RuntimeException(errorMsg);
 				} finally {
-					log.info("响应参数:【{}】,耗时:【{}】", response, (System.currentTimeMillis() - start) + "毫秒");
+					log.info("响应参数:【{}】,耗时:【{}】", lsCloudResponse, (System.currentTimeMillis() - start) + "毫秒");
 				}
+			String returnTypeName = lsCloudResponse.getReturnTypeName();
 
 				//完成目标类型的转换
-				Object targetResult =  handleResult(method, response);
-				String JsonResult =  JsonUtils.object2JsonString(targetResult);
-				return JsonUtils.json2Object(JsonResult, getbericTeturnType);
+			Object targetResult = handleResult(method, lsCloudResponse);
+			String JsonResult = JsonUtils.object2JsonString(targetResult);
+			Class clazz = Class.forName(returnTypeName);
+			targetResult = JsonUtils.json2Object(JsonResult, clazz);
+
+			log.info("反序列化后的对象===>{}", targetResult);
+			return targetResult;
 		}
 
 		private RestTemplate getRestTemplate() {
@@ -264,11 +268,11 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	 * 处理返回结果
 	 *
 	 * @param method
-	 * @param response
+	 * @param lsCloudResponse
 	 * @return
 	 */
-	private static Object handleResult(Method method, Response response) {
-		Object result = response.getData ();
+	private static Object handleResult(Method method, LsCloudResponse lsCloudResponse) {
+		Object result = lsCloudResponse.getData();
 		Type type = method.getGenericReturnType();
 		String returnTypeName = type.toString();
 		switch (returnTypeName) {
