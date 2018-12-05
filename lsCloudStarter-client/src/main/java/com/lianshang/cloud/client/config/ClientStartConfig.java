@@ -232,7 +232,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			//某些方法特殊处理
 			Object dtoList = getSomeMethodTarget(args, methodName, JsonResult);
 			if (dtoList != null){
-				log.info("反序列化后的对象===>{}", targetResult);
+				log.info("反序列化后的对象===>{}", dtoList);
 				return dtoList;
 			}
 
