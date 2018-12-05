@@ -24,6 +24,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
@@ -227,6 +228,14 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
 			String JsonResult = JsonUtils.object2JsonString(targetResult);
+
+			//某些方法特殊处理
+			Object dtoList = getSomeMethodTarget(args, methodName, JsonResult);
+			if (dtoList != null){
+				log.info("反序列化后的对象===>{}", targetResult);
+				return dtoList;
+			}
+
 			Class clazz = Class.forName(returnTypeName);
 			targetResult = JsonUtils.json2Object(JsonResult, clazz);
 
@@ -262,6 +271,44 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 			return urlBuilder.toString();
 		}
+	}
+
+	/**
+	 * 某些方法特殊处理
+	 * @param args
+	 * @param methodName
+	 * @param jsonResult
+	 * @return
+	 */
+	private static Object getSomeMethodTarget(Object[] args, String methodName, String jsonResult) {
+		if ((methodName.equals("getById")
+        || methodName.equals("getListByIds")
+        || methodName.equals("getList")) && args.length == 2) {
+            Object dtoClassName = args[1];
+            if (dtoClassName.toString().contains("Dto")) {
+                try {
+                    Class dtoClass = Class.forName(dtoClassName.toString());
+                    if (methodName.equals("getListByIds") || methodName.equals("getList")) {
+                        List list = JsonUtils.json2Object(jsonResult, List.class);
+                        if (!CollectionUtils.isEmpty(list)) {
+                            List dtoList = new ArrayList<>();
+                            for (Object object1 : list) {
+                                Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), dtoClass);
+                                dtoList.add(dtoTarget);
+                            }
+                            return dtoList;
+                        }
+                    }else if(methodName.equals("getById")){
+                        Object dtoTarget = JsonUtils.json2Object(jsonResult, dtoClass);
+                        return  dtoTarget;
+                    }
+                } catch (Exception ex) {
+
+                }
+
+            }
+        }
+		return null;
 	}
 
 	/**
