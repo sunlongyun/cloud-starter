@@ -155,6 +155,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 		public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 
 				String methodName = method.getName();
+			    Type resultType = method.getGenericReturnType();
+
 
 				if (methodName.equals("toString")) {
 					return interfaceName;
@@ -237,7 +239,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			}
 
 			Class clazz = Class.forName(returnTypeName);
-			targetResult = JsonUtils.json2Object(JsonResult, clazz);
+			targetResult = JsonUtils.json2Object(JsonResult, Class.forName(resultType.getTypeName()));
 
 			log.info("反序列化后的对象===>{}", targetResult);
 			return targetResult;
