@@ -129,7 +129,7 @@ public class ServerStarterConfig
             Method[] methods = beanClass.getDeclaredMethods();
             if (null != methods) {
                 for (Method m : methods) {
-                    if (m.getName().equals(methodName)) {
+                    if (m.getName().equals(methodName) && m.getParameterTypes().length == paramTypeArray.length) {
                         method = m;
                         break;
                     }
