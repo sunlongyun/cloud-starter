@@ -7,7 +7,7 @@
     <artifactId>cloud-starter</artifactId>
     <name>cloud-starter</name>
     <packaging>pom</packaging>
-    <version>0.0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -83,7 +83,7 @@
             <id>snapshots</id>
             <name>ActivityCenter Porject Snapshot</name>
             <!--http://ip地址/nexus/content/repositories/snapshots/-->
-            <url>http://artifactory.lsfash.cn/artifactory/libs-local</url>
+            <url>http://artifactory.lsfash.cn/artifactory/libs-snapshot-local</url>
             <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
 

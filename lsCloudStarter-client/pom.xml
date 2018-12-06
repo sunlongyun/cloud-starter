@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.lianshang.cloud</groupId>
         <artifactId>cloud-starter</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -72,7 +72,7 @@
             <id>snapshots</id>
             <name>ActivityCenter Porject Snapshot</name>
             <!--http://ip地址/nexus/content/repositories/snapshots/-->
-            <url>http://artifactory.lsfash.cn/artifactory/libs-local</url>
+            <url>http://artifactory.lsfash.cn/artifactory/libs-snapshot-local</url>
             <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
 
