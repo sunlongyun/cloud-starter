@@ -157,7 +157,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				String methodName = method.getName();
 			    Type resultType = method.getGenericReturnType();
 
-
 				if (methodName.equals("toString")) {
 					return interfaceName;
 				}
@@ -225,7 +224,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				} finally {
 					log.info("响应参数:【{}】,耗时:【{}】", lsCloudResponse, (System.currentTimeMillis() - start) + "毫秒");
 				}
-			String returnTypeName = lsCloudResponse.getReturnTypeName();
 
 				//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
@@ -238,8 +236,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				return dtoList;
 			}
 
-			Class clazz = Class.forName(returnTypeName);
-			targetResult = JsonUtils.json2Object(JsonResult, Class.forName(resultType.getTypeName()));
+			targetResult = JsonUtils.json2Object(JsonResult, resultType);
 
 			log.info("反序列化后的对象===>{}", targetResult);
 			return targetResult;
