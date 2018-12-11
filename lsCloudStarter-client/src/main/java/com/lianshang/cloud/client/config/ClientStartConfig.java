@@ -201,8 +201,10 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 				try {
 					log.info("请求参数=>{}", paramsJson);
 					log.info("请求url=>{}", url);
-					log.info("lsReq==>{}", MDC.get("lsReq"));
-					url = url + "?lsReq=" + MDC.get("lsReq");
+					String lsReq = MDC.get("lsReq");
+					if (StringUtils.isNotEmpty(lsReq)) {
+						url = url + "?lsReq=" + lsReq;
+					}
 					lsCloudResponse = restTemplate.postForEntity(url, formEntity, LsCloudResponse.class).getBody();
 					if (!ResponseCodeEnum.SUCCESS.code().equals(lsCloudResponse.getCode())) {
 						throw new RuntimeException(lsCloudResponse.getMsg());
