@@ -299,8 +299,12 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 				int len = args.length;
 				for (int i = 0; i < len; i++) {
-					String argName = args[i].getClass().getName();
-					realTypeName.add(argName);
+					if(null == args[i]){
+						realTypeName.add(parameterTypes[i].getName());
+					}else{
+						String argName = args[i].getClass().getName();
+						realTypeName.add(argName);
+					}
 				}
 
 
