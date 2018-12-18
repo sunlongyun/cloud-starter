@@ -28,7 +28,7 @@ public class ServerStarterConfig
 	private ApplicationContext applicationContext;
 	private static Map<String, Object> cloudServiceMap = new HashMap<>();
 	ServerStarterConfig(){
-		log.info("serverStarter初始化-------------");
+		log.info("ServerStarterConfig-------------");
 	}
 	/**
 	 * 保存服务发布者的bean
@@ -41,7 +41,7 @@ public class ServerStarterConfig
 			Collection<?> values = cloudServices.values();
 			for (Object v : values) {
 				Class<?> targetClass = v.getClass();
-				if(targetClass.getName().contains("CGLIB")){
+				if(isProxyClass(targetClass)){
 					targetClass = targetClass.getSuperclass();
 				}
 				Class<?>[] inters = targetClass.getInterfaces();
@@ -178,7 +178,7 @@ public class ServerStarterConfig
 			bean = cloudServiceMap.get(key);
 			Class<?> targetClass = bean.getClass();
 			//还原真实实现类
-			if(targetClass.getName().contains("CGLIB")){
+			if(isProxyClass(targetClass)){
 				targetClass = targetClass.getSuperclass();
 			}
 			//获取接口 类
@@ -193,11 +193,17 @@ public class ServerStarterConfig
 		}
 		return null;
 	}
-public static void main(String[] args) {
-	String x = "com.lianshang.cloth2.store.service.impl.ClothStoreServiceImpl$$EnhancerBySpringCGLIB$$1cc820dc";
-	String y = "com.lianshang.cloth2.store.service";
-	System.out.println(x.contains(y));
-}
+	/**
+	 * 是否是代理类
+	 * @param thisObjClass
+	 * @return
+	 */
+	private static boolean isProxyClass(Class thisObjClass) {
+		if (thisObjClass.getName().toUpperCase().contains("CGLIB") || thisObjClass.getName().toUpperCase().contains("PROXY")) {
+			return true;
+		}
+		return false;
+	}
 	/**
 	 * 返回api列表
 	 */

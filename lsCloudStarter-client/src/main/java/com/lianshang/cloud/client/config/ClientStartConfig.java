@@ -46,7 +46,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 	public static final String CLOUD_CLIENT_TEMPLATE = "serverNameRestTemplate";
 	public static final String URL_CLIENT_TEMPLATE = "urlNameRestTemplate";
-	public static final String COM_LIANSHANG_CLOTH2_BASE_CUSTOMER_SERVICE_IMPL_SERVICE_IMPL = "com.lianshang.cloth2.base.customer.service.impl.ServiceImpl";
+
 	/**
 	 * 根据服务名查询的restTemplate
 	 */
@@ -66,9 +66,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 		return new RestTemplate();
 	}
 
-
 	ClientStartConfig() {
-		log.info("ClientStarter===>初始化-------");
+		log.info("ClientStartConfig-------");
 	}
 	/**
 	 * 创建 RestTemplate
@@ -98,7 +97,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	 */
 	private void setFieldIfNecessary(Object targetBean) {
 		Class targetClzz = targetBean.getClass();
-		if (targetClzz.getName().contains("CGLIB")
+		if (isProxyClass(targetClzz)
 		|| targetClzz.getName().contains("@")) {
 			targetClzz = targetClzz.getSuperclass();
 		}
@@ -159,7 +158,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			RestTemplate restTemplate = getRestTemplate();
 
 			//泛型类型
-			Class genericReturnClass = getGenericTypeName(object.getClass());
+			Class genericReturnClass = getGenericTypeClass(object.getClass());
+
 			String methodName = method.getName();
 			//实际返回值类型
 			Type resultType = method.getGenericReturnType();
@@ -173,7 +173,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			GetHeader getHeader = new GetHeader(method, args, methodName).invoke();
 			Map<String, Object> postParameters = getHeader.getPostParameters();
 			HttpHeaders headers = getHeader.getHeaders();
-			args = getHeader.getArgs();
 			String paramsJson = JsonUtils.object2JsonString(postParameters);
 			HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
 			/**
@@ -185,24 +184,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
 			String jsonResult = JsonUtils.object2JsonString(targetResult);
-
-			if (null != genericReturnClass) {
-				if (resultType.getTypeName().contains("List")) {
-					List list = JsonUtils.json2Object(jsonResult, List.class);
-					if (!CollectionUtils.isEmpty(list)) {
-						List dtoList = new ArrayList<>();
-						for (Object object1 : list) {
-							Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), genericReturnClass);
-							dtoList.add(dtoTarget);
-						}
-						return dtoList;
-					}
-				} else {
-					return JsonUtils.json2Object(jsonResult, genericReturnClass);
-				}
-			}
-
-			targetResult = JsonUtils.json2Object(jsonResult, resultType);
+			targetResult = getTargetResult(genericReturnClass, resultType, targetResult, jsonResult);
+			//一般类型
 			log.info("反序列化后的对象===>{}", targetResult);
 			return targetResult;
 		}
@@ -340,6 +323,44 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	}
 
 	/**
+	 * 一系列转换,处理成目标对象
+	 *
+	 * @param genericReturnClass
+	 * @param resultType
+	 * @param targetResult
+	 * @param jsonResult
+	 * @return
+	 */
+	private static Object getTargetResult(Class genericReturnClass, Type resultType, Object targetResult, String jsonResult) {
+
+		//泛型继承导致的拿不到真实类型的情况
+		int classLen = 1;
+		if (null != resultType) {
+			String returnTypeName = resultType.getTypeName();
+			classLen = returnTypeName.split("\\.").length;
+		}
+
+		if (resultType == null || resultType.getTypeName().equals(Object.class.getName()) || classLen == 1) {
+			if (resultType.getTypeName().contains("List")) {
+				List list = JsonUtils.json2Object(jsonResult, List.class);
+				if (!CollectionUtils.isEmpty(list)) {
+					List dtoList = new ArrayList<>();
+					for (Object object1 : list) {
+						Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), genericReturnClass);
+						dtoList.add(dtoTarget);
+					}
+					targetResult = dtoList;
+				}
+			} else {
+				targetResult = JsonUtils.json2Object(jsonResult, genericReturnClass);
+			}
+		} else {
+			targetResult = JsonUtils.json2Object(jsonResult, resultType);
+		}
+		return targetResult;
+	}
+
+	/**
 	 * 是否是代理类
 	 * @param thisObjClass
 	 * @return
@@ -356,7 +377,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 	 *
 	 * @param thisObjClass
 	 */
-	private static Class getGenericTypeName(Class thisObjClass) {
+	private static Class getGenericTypeClass(Class thisObjClass) {
 
 		if(isProxyClass(thisObjClass)) {
 			Class superclass = thisObjClass.getSuperclass();
@@ -368,19 +389,8 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 		}
 
 		Class genericClass = null;
-		genericClass = GenericsUtils.getSuperClassGenricType(thisObjClass);
-
-		if (null == genericClass || genericClass == Object.class) {
-			int index = 0;
-			Class superClass = thisObjClass.getSuperclass();
-			if (superClass.getName().equals(COM_LIANSHANG_CLOTH2_BASE_CUSTOMER_SERVICE_IMPL_SERVICE_IMPL)) {
-				index = 2;
-			}
-			genericClass = GenericsUtils.getSuperClassGenricType(superClass, index);
-
-			if (null == genericClass || genericClass == Object.class) {
-				genericClass = GenericsUtils.getSuperClassGenricType(thisObjClass.getInterfaces()[0]);
-			}
+		if (null != thisObjClass) {
+			genericClass = GenericsUtils.getSuperClassGenricType(thisObjClass);
 		}
 
 		if (null == genericClass || genericClass == Object.class) {
@@ -389,44 +399,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 		return genericClass;
 	}
-
-//	/**
-//	 * 某些方法特殊处理
-//	 * @param args
-//	 * @param methodName
-//	 * @param jsonResult
-//	 * @return
-//	 */
-//	private static Object getSomeMethodTarget(Object[] args, String methodName, String jsonResult) {
-//		if ((methodName.equals("getById")
-//        || methodName.equals("getListByIds")
-//        || methodName.equals("getList")) && args.length == 2) {
-//            Object dtoClassName = args[1];
-//            if (dtoClassName.toString().contains("Dto")) {
-//                try {
-//                    Class dtoClass = Class.forName(dtoClassName.toString());
-//                    if (methodName.equals("getListByIds") || methodName.equals("getList")) {
-//                        List list = JsonUtils.json2Object(jsonResult, List.class);
-//                        if (!CollectionUtils.isEmpty(list)) {
-//                            List dtoList = new ArrayList<>();
-//                            for (Object object1 : list) {
-//                                Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), dtoClass);
-//                                dtoList.add(dtoTarget);
-//                            }
-//                            return dtoList;
-//                        }
-//                    }else if(methodName.equals("getById")){
-//                        Object dtoTarget = JsonUtils.json2Object(jsonResult, dtoClass);
-//                        return  dtoTarget;
-//                    }
-//                } catch (Exception ex) {
-//
-//                }
-//
-//            }
-//        }
-//		return null;
-//	}
 
 	/**
 	 * 处理返回结果
@@ -461,8 +433,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			return result;
 		}
 	}
-
-	
 
 	/**
 	 * 判断是否是ip

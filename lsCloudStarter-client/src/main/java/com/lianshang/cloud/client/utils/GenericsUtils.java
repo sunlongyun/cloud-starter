@@ -1,5 +1,7 @@
 package com.lianshang.cloud.client.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -9,6 +11,7 @@ import java.lang.reflect.Type;
  * @AUTHOR 孙龙云
  * @date 2018-12-17 下午6:06
  */
+@Slf4j
 public class GenericsUtils {
 
     /**
@@ -30,10 +33,15 @@ public class GenericsUtils {
      */
     public static Class getSuperClassGenricType(Class clazz, int index)
       throws IndexOutOfBoundsException {
+
         Type genType = clazz.getGenericSuperclass();
+        if (null == genType || genType.getTypeName() == Object.class.getName()) {
+            genType = clazz.getGenericInterfaces()[0];
+        }
         if (!(genType instanceof ParameterizedType)) {
             return Object.class;
         }
+        ParameterizedType parameterizedType = ((ParameterizedType) genType);
         Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
         if (index >= params.length || index < 0) {
             return Object.class;
