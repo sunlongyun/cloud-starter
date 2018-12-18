@@ -3,6 +3,7 @@ package com.lianshang.cloud.client.config;
 import com.lianshang.cloud.client.annotation.LsCloudAutowired;
 import com.lianshang.cloud.client.beans.LsCloudResponse;
 import com.lianshang.cloud.client.enums.ResponseCodeEnum;
+import com.lianshang.cloud.client.utils.GenericsUtils;
 import com.lianshang.cloud.client.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
@@ -45,6 +46,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 	public static final String CLOUD_CLIENT_TEMPLATE = "serverNameRestTemplate";
 	public static final String URL_CLIENT_TEMPLATE = "urlNameRestTemplate";
+	public static final String COM_LIANSHANG_CLOTH2_BASE_CUSTOMER_SERVICE_IMPL_SERVICE_IMPL = "com.lianshang.cloth2.base.customer.service.impl.ServiceImpl";
 	/**
 	 * 根据服务名查询的restTemplate
 	 */
@@ -91,7 +93,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 	/**
 	 * 给bean设置字段,如果有必要
-	 * 
+	 *
 	 * @param targetBean
 	 */
 	private void setFieldIfNecessary(Object targetBean) {
@@ -154,94 +156,96 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 		public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 
-				String methodName = method.getName();
-			    Type resultType = method.getGenericReturnType();
+			RestTemplate restTemplate = getRestTemplate();
 
-				if (methodName.equals("toString")) {
-					return interfaceName;
-				}
-				String url = getUrl();
+			//泛型类型
+			Class genericReturnClass = getGenericTypeName(object.getClass());
+			String methodName = method.getName();
+			//实际返回值类型
+			Type resultType = method.getGenericReturnType();
 
-				RestTemplate restTemplate = getRestTemplate();
-
-				Map<String, Object> postParameters = new HashMap<>();
-				postParameters.put("methodName", methodName);
-				postParameters.put("interfaceName", interfaceName);
-
-				if(null == args) args = new Object[0];
-				List<String> realTypeName = new ArrayList<>();
-				Class<?>[] parameterTypes = method.getParameterTypes();
-
-				int len = args.length;
-				for (int i = 0; i < len; i++) {
-					String argName = args[i].getClass().getName();
-					realTypeName.add(argName);
-				}
+			if (methodName.equals("toString")) {
+				return interfaceName;
+			}
+			String url = getUrl();
 
 
-				List<String> paramsParamTypeNames = new ArrayList<>();
-				for(Class superType : parameterTypes){
-					paramsParamTypeNames.add(superType.getName());
-				}
-				postParameters.put("params", Arrays.asList(args));
-				postParameters.put("paramTypeNames", realTypeName);
+			GetHeader getHeader = new GetHeader(method, args, methodName).invoke();
+			Map<String, Object> postParameters = getHeader.getPostParameters();
+			HttpHeaders headers = getHeader.getHeaders();
+			args = getHeader.getArgs();
+			String paramsJson = JsonUtils.object2JsonString(postParameters);
+			HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
+			/**
+			 * 获取返回值
+			 */
+			LsCloudResponse lsCloudResponse = getLsCloudResponse(url, restTemplate, formEntity);
 
-				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
-				
-				HttpHeaders headers = new HttpHeaders();
-				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
-				headers.setContentType(mediaType);
-				headers.add("Accept", MediaType.APPLICATION_JSON.toString());
 
-				String paramsJson = JsonUtils.object2JsonString(postParameters);
-				HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
-
-			    LsCloudResponse lsCloudResponse = null;
-				long start = System.currentTimeMillis();
-				try {
-					log.info("请求参数=>{}", paramsJson);
-					log.info("请求url=>{}", url);
-					String lsReq = MDC.get("lsReq");
-					if (StringUtils.isNotEmpty(lsReq)) {
-						url = url + "?lsReq=" + lsReq;
-					}
-					lsCloudResponse = restTemplate.postForEntity(url, formEntity, LsCloudResponse.class).getBody();
-					if (!ResponseCodeEnum.SUCCESS.code().equals(lsCloudResponse.getCode())) {
-						throw new RuntimeException(lsCloudResponse.getMsg());
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					String errorMsg = e.getMessage();
-					if (StringUtils.isEmpty(errorMsg)) {
-						Throwable throwable = e.getCause();
-						if (null != throwable) {
-							errorMsg = throwable.getMessage();
-						}
-					}
-					if (StringUtils.isEmpty(errorMsg)) {
-						errorMsg = "远程服务请求失败,请联系管理员--cllientStarter";
-					}
-					log.error("远程服务调用失败:{}", errorMsg);
-					throw new RuntimeException(errorMsg);
-				} finally {
-					log.info("响应参数:【{}】,耗时:【{}】", lsCloudResponse, (System.currentTimeMillis() - start) + "毫秒");
-				}
-
-				//完成目标类型的转换
+			//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
-			String JsonResult = JsonUtils.object2JsonString(targetResult);
+			String jsonResult = JsonUtils.object2JsonString(targetResult);
 
-			//某些方法特殊处理
-			Object dtoList = getSomeMethodTarget(args, methodName, JsonResult);
-			if (dtoList != null){
-				log.info("反序列化后的对象===>{}", dtoList);
-				return dtoList;
+			if (null != genericReturnClass) {
+				if (resultType.getTypeName().contains("List")) {
+					List list = JsonUtils.json2Object(jsonResult, List.class);
+					if (!CollectionUtils.isEmpty(list)) {
+						List dtoList = new ArrayList<>();
+						for (Object object1 : list) {
+							Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), genericReturnClass);
+							dtoList.add(dtoTarget);
+						}
+						return dtoList;
+					}
+				} else {
+					return JsonUtils.json2Object(jsonResult, genericReturnClass);
+				}
 			}
 
-			targetResult = JsonUtils.json2Object(JsonResult, resultType);
-
+			targetResult = JsonUtils.json2Object(jsonResult, resultType);
 			log.info("反序列化后的对象===>{}", targetResult);
 			return targetResult;
+		}
+
+		/**
+		 * 查询返回值
+		 *
+		 * @param url
+		 * @param restTemplate
+		 * @param formEntity
+		 * @return
+		 */
+		private LsCloudResponse getLsCloudResponse(String url, RestTemplate restTemplate, HttpEntity<String> formEntity) {
+			long start = System.currentTimeMillis();
+			LsCloudResponse lsCloudResponse = null;
+			try {
+				log.info("请求url=>{}", url);
+				String lsReq = MDC.get("lsReq");
+				if (StringUtils.isNotEmpty(lsReq)) {
+					url = url + "?lsReq=" + lsReq;
+				}
+				lsCloudResponse = restTemplate.postForEntity(url, formEntity, LsCloudResponse.class).getBody();
+				if (!ResponseCodeEnum.SUCCESS.code().equals(lsCloudResponse.getCode())) {
+					throw new RuntimeException(lsCloudResponse.getMsg());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				String errorMsg = e.getMessage();
+				if (StringUtils.isEmpty(errorMsg)) {
+					Throwable throwable = e.getCause();
+					if (null != throwable) {
+						errorMsg = throwable.getMessage();
+					}
+				}
+				if (StringUtils.isEmpty(errorMsg)) {
+					errorMsg = "远程服务请求失败,请联系管理员--cllientStarter";
+				}
+				log.error("远程服务调用失败:{}", errorMsg);
+				throw new RuntimeException(errorMsg);
+			} finally {
+				log.info("响应参数:【{}】,耗时:【{}】", lsCloudResponse, (System.currentTimeMillis() - start) + "毫秒");
+			}
+			return lsCloudResponse;
 		}
 
 		private RestTemplate getRestTemplate() {
@@ -272,45 +276,157 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 			return urlBuilder.toString();
 		}
+
+		/**
+		 * 获取头部信息
+		 */
+		private class GetHeader {
+			private Method method;
+			private Object[] args;
+			private String methodName;
+			private Map<String, Object> postParameters;
+			private HttpHeaders headers;
+
+			public GetHeader(Method method, Object[] args, String methodName) {
+				this.method = method;
+				this.args = args;
+				this.methodName = methodName;
+			}
+
+			public Object[] getArgs() {
+				return args;
+			}
+
+			public Map<String, Object> getPostParameters() {
+				return postParameters;
+			}
+
+			public HttpHeaders getHeaders() {
+				return headers;
+			}
+
+			public GetHeader invoke() {
+				postParameters = new HashMap<>();
+				postParameters.put("methodName", methodName);
+				postParameters.put("interfaceName", interfaceName);
+
+				if (null == args) args = new Object[0];
+				List<String> realTypeName = new ArrayList<>();
+				Class<?>[] parameterTypes = method.getParameterTypes();
+
+				int len = args.length;
+				for (int i = 0; i < len; i++) {
+					String argName = args[i].getClass().getName();
+					realTypeName.add(argName);
+				}
+
+
+				List<String> paramsParamTypeNames = new ArrayList<>();
+				for (Class superType : parameterTypes) {
+					paramsParamTypeNames.add(superType.getName());
+				}
+				postParameters.put("params", Arrays.asList(args));
+				postParameters.put("paramTypeNames", realTypeName);
+
+				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
+
+				headers = new HttpHeaders();
+				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
+				headers.setContentType(mediaType);
+				headers.add("Accept", MediaType.APPLICATION_JSON.toString());
+				return this;
+			}
+		}
 	}
 
 	/**
-	 * 某些方法特殊处理
-	 * @param args
-	 * @param methodName
-	 * @param jsonResult
+	 * 是否是代理类
+	 * @param thisObjClass
 	 * @return
 	 */
-	private static Object getSomeMethodTarget(Object[] args, String methodName, String jsonResult) {
-		if ((methodName.equals("getById")
-        || methodName.equals("getListByIds")
-        || methodName.equals("getList")) && args.length == 2) {
-            Object dtoClassName = args[1];
-            if (dtoClassName.toString().contains("Dto")) {
-                try {
-                    Class dtoClass = Class.forName(dtoClassName.toString());
-                    if (methodName.equals("getListByIds") || methodName.equals("getList")) {
-                        List list = JsonUtils.json2Object(jsonResult, List.class);
-                        if (!CollectionUtils.isEmpty(list)) {
-                            List dtoList = new ArrayList<>();
-                            for (Object object1 : list) {
-                                Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), dtoClass);
-                                dtoList.add(dtoTarget);
-                            }
-                            return dtoList;
-                        }
-                    }else if(methodName.equals("getById")){
-                        Object dtoTarget = JsonUtils.json2Object(jsonResult, dtoClass);
-                        return  dtoTarget;
-                    }
-                } catch (Exception ex) {
-
-                }
-
-            }
-        }
-		return null;
+	private static boolean isProxyClass(Class thisObjClass) {
+		if (thisObjClass.getName().toUpperCase().contains("CGLIB") || thisObjClass.getName().toUpperCase().contains("PROXY")) {
+			return true;
+		}
+		return false;
 	}
+
+	/**
+	 * 获取泛型名称
+	 *
+	 * @param thisObjClass
+	 */
+	private static Class getGenericTypeName(Class thisObjClass) {
+
+		if(isProxyClass(thisObjClass)) {
+			Class superclass = thisObjClass.getSuperclass();
+			if(null ==superclass || Object.class == superclass){
+				thisObjClass = thisObjClass.getInterfaces()[0];
+			}else{
+				thisObjClass = superclass;
+			}
+		}
+
+		Class genericClass = null;
+		genericClass = GenericsUtils.getSuperClassGenricType(thisObjClass);
+
+		if (null == genericClass || genericClass == Object.class) {
+			int index = 0;
+			Class superClass = thisObjClass.getSuperclass();
+			if (superClass.getName().equals(COM_LIANSHANG_CLOTH2_BASE_CUSTOMER_SERVICE_IMPL_SERVICE_IMPL)) {
+				index = 2;
+			}
+			genericClass = GenericsUtils.getSuperClassGenricType(superClass, index);
+
+			if (null == genericClass || genericClass == Object.class) {
+				genericClass = GenericsUtils.getSuperClassGenricType(thisObjClass.getInterfaces()[0]);
+			}
+		}
+
+		if (null == genericClass || genericClass == Object.class) {
+			return null;
+		}
+
+		return genericClass;
+	}
+
+//	/**
+//	 * 某些方法特殊处理
+//	 * @param args
+//	 * @param methodName
+//	 * @param jsonResult
+//	 * @return
+//	 */
+//	private static Object getSomeMethodTarget(Object[] args, String methodName, String jsonResult) {
+//		if ((methodName.equals("getById")
+//        || methodName.equals("getListByIds")
+//        || methodName.equals("getList")) && args.length == 2) {
+//            Object dtoClassName = args[1];
+//            if (dtoClassName.toString().contains("Dto")) {
+//                try {
+//                    Class dtoClass = Class.forName(dtoClassName.toString());
+//                    if (methodName.equals("getListByIds") || methodName.equals("getList")) {
+//                        List list = JsonUtils.json2Object(jsonResult, List.class);
+//                        if (!CollectionUtils.isEmpty(list)) {
+//                            List dtoList = new ArrayList<>();
+//                            for (Object object1 : list) {
+//                                Object dtoTarget = JsonUtils.json2Object(JsonUtils.object2JsonString(object1), dtoClass);
+//                                dtoList.add(dtoTarget);
+//                            }
+//                            return dtoList;
+//                        }
+//                    }else if(methodName.equals("getById")){
+//                        Object dtoTarget = JsonUtils.json2Object(jsonResult, dtoClass);
+//                        return  dtoTarget;
+//                    }
+//                } catch (Exception ex) {
+//
+//                }
+//
+//            }
+//        }
+//		return null;
+//	}
 
 	/**
 	 * 处理返回结果
