@@ -1,1 +1,18 @@
-1.0.0 第一版发布 
+
+0.0.1  第一版发布
+
+0.0.2  1.修复接口(父类)泛型类型 反序列时真实类型丢失导致反序列失败的问题.
+
+        例如:
+        public class ServiceImpl<M extends LsBaseMapper<T>, T, DTO> implements IService<DTO> {
+            ...
+                public DTO getById(Serializable id) {
+                    ...
+                }
+            ...
+        }
+        公共的getList,getById方法的反序列化
+
+       2. 解决了入参中存在null时,获取真实参数类型失败,导致的空指针问题
+
+
