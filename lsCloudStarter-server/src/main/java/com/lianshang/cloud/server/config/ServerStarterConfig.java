@@ -26,7 +26,28 @@ public class ServerStarterConfig
 		implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
+	/**
+	 * 全路径接口名称----对象
+	 * 简易接口名称--对象
+	 */
 	private static Map<String, Object> cloudServiceMap = new HashMap<>();
+	private static Map<String, Object> simpleServiceMap = new HashMap<>();
+
+	/**
+	 * 获取服务对象map
+	 * @return
+	 */
+	public static Map<String, Object> getCloudServiceMap(){
+		return ServerStarterConfig.simpleServiceMap;
+	}
+	/**
+	 * 获取建议服务对象map
+	 * key是接口的简易名称
+	 * @return
+	 */
+	public static Map<String, Object> getSimpleServiceMap(){
+		return ServerStarterConfig.simpleServiceMap;
+	}
 	ServerStarterConfig(){
 		log.info("ServerStarterConfig-------------");
 	}
@@ -46,7 +67,13 @@ public class ServerStarterConfig
 				}
 				Class<?>[] inters = targetClass.getInterfaces();
 				for (Class inter : inters) {
-					cloudServiceMap.put(inter.getName(), v);
+					String keyName = inter.getName();
+					String[] keyNameSplits = keyName.split("\\.");
+					int len = keyNameSplits.length;
+					String simpleKeyName = keyNameSplits[len-1 ];
+					cloudServiceMap.put(keyName, v);
+
+					simpleServiceMap.put(simpleKeyName, v);
 				}
 			}
 		}
@@ -213,7 +240,12 @@ public class ServerStarterConfig
 		while (keys.hasNext()) {
 			Map<String, Object> data = new HashMap<>();
 			String key = keys.next();
+			String[] interNameStrs = key.split("\\.");
+			int len = interNameStrs.length;
+
 			data.put("interfaceName", key);
+			data.put("simpleName", interNameStrs[len - 1]);
+
 			Object bean = cloudServiceMap.get(key);
 			if (null != bean) {
 				setMethodInfo(data, bean);

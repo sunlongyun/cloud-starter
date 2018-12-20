@@ -3,6 +3,7 @@ package com.lianshang.cloud.client.config;
 import com.lianshang.cloud.client.annotation.LsCloudAutowired;
 import com.lianshang.cloud.client.beans.LsCloudResponse;
 import com.lianshang.cloud.client.enums.ResponseCodeEnum;
+import com.lianshang.cloud.client.utils.FastJsonUtils;
 import com.lianshang.cloud.client.utils.GenericsUtils;
 import com.lianshang.cloud.client.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +32,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -41,6 +47,7 @@ import java.util.regex.Pattern;
 @EnableEurekaClient
 @EnableDiscoveryClient
 @ConditionalOnMissingBean(ClientStartConfig.class)
+@EnableFeignClients
 @Order(1000)
 public class ClientStartConfig implements ApplicationContextAware, BeanPostProcessor {
 
@@ -165,15 +172,28 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			Type resultType = method.getGenericReturnType();
 
 			if (methodName.equals("toString")) {
-				return interfaceName;
+				return "";
 			}
-			String url = getUrl();
+			String[] interNamePaths = interfaceName.split("\\.");
+			int len = interNamePaths.length;
+			String simpleInterName = interNamePaths[len - 1];
+			String url = getUrl(simpleInterName, method.getName());
 
 
 			GetHeader getHeader = new GetHeader(method, args, methodName).invoke();
 			Map<String, Object> postParameters = getHeader.getPostParameters();
 			HttpHeaders headers = getHeader.getHeaders();
-			String paramsJson = JsonUtils.object2JsonString(postParameters);
+
+			Object paramsObj = new Object();
+			String paramsJson = "{}";
+			if (!postParameters.isEmpty()) {
+				if (postParameters.size() == 1) {
+					paramsObj = postParameters.values().iterator().next();
+				} else {
+					paramsObj = postParameters;
+				}
+			}
+			paramsJson = FastJsonUtils.convertObjectToJSON(paramsObj);
 			HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
 			/**
 			 * 获取返回值
@@ -246,7 +266,7 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 		 *
 		 * @return
 		 */
-		private String getUrl() {
+		private String getUrl(String simpleInterfaceName, String methodName) {
 			StringBuilder urlBuilder = new StringBuilder();
 			if (!serviceName.startsWith("http")) {
 				urlBuilder.append("http://");
@@ -255,7 +275,9 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			if (!serviceName.endsWith("/")) {
 				urlBuilder.append("/");
 			}
-			urlBuilder.append("lsCloud/execute");
+			//urlBuilder.append("lsCloud/execute");   0.0.1版本的使用方式
+
+			urlBuilder.append(simpleInterfaceName).append("/").append(methodName);
 
 			return urlBuilder.toString();
 		}
@@ -290,32 +312,43 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 
 			public GetHeader invoke() {
 				postParameters = new HashMap<>();
-				postParameters.put("methodName", methodName);
-				postParameters.put("interfaceName", interfaceName);
 
-				if (null == args) args = new Object[0];
-				List<String> realTypeName = new ArrayList<>();
-				Class<?>[] parameterTypes = method.getParameterTypes();
-
-				int len = args.length;
-				for (int i = 0; i < len; i++) {
-					if(null == args[i]){
-						realTypeName.add(parameterTypes[i].getName());
-					}else{
-						String argName = args[i].getClass().getName();
-						realTypeName.add(argName);
+				Parameter[] parameters = method.getParameters();
+				if (null != parameters) {
+					int i = 0;
+					for (Parameter parameter : parameters) {
+						String paramName = parameter.getName();
+						Object value = args[i];
+						postParameters.put(paramName, value);
+						i++;
 					}
 				}
+//				postParameters.put("methodName", methodName);
+//				postParameters.put("interfaceName", interfaceName);
+
+//				if (null == args) args = new Object[0];
+//				List<String> realTypeName = new ArrayList<>();
+//				Class<?>[] parameterTypes = method.getParameterTypes();
+//
+//				int len = args.length;
+//				for (int i = 0; i < len; i++) {
+//					if(null == args[i]){
+//						realTypeName.add(parameterTypes[i].getName());
+//					}else{
+//						String argName = args[i].getClass().getName();
+//						realTypeName.add(argName);
+//					}
+//				}
 
 
-				List<String> paramsParamTypeNames = new ArrayList<>();
-				for (Class superType : parameterTypes) {
-					paramsParamTypeNames.add(superType.getName());
-				}
-				postParameters.put("params", Arrays.asList(args));
-				postParameters.put("paramTypeNames", realTypeName);
-
-				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
+//				List<String> paramsParamTypeNames = new ArrayList<>();
+//				for (Class superType : parameterTypes) {
+//					paramsParamTypeNames.add(superType.getName());
+//				}
+//				postParameters.put("params", Arrays.asList(args));
+//				postParameters.put("paramTypeNames", realTypeName);
+//
+//				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
 
 				headers = new HttpHeaders();
 				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
