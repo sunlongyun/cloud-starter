@@ -193,13 +193,12 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 					paramsObj = postParameters;
 				}
 			}
-			paramsJson = FastJsonUtils.convertObjectToJSON(paramsObj);
+			paramsJson = JsonUtils.object2JsonString(paramsObj);
 			HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
 			/**
 			 * 获取返回值
 			 */
 			LsCloudResponse lsCloudResponse = getLsCloudResponse(url, restTemplate, formEntity);
-
 
 			//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
@@ -323,32 +322,6 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 						i++;
 					}
 				}
-//				postParameters.put("methodName", methodName);
-//				postParameters.put("interfaceName", interfaceName);
-
-//				if (null == args) args = new Object[0];
-//				List<String> realTypeName = new ArrayList<>();
-//				Class<?>[] parameterTypes = method.getParameterTypes();
-//
-//				int len = args.length;
-//				for (int i = 0; i < len; i++) {
-//					if(null == args[i]){
-//						realTypeName.add(parameterTypes[i].getName());
-//					}else{
-//						String argName = args[i].getClass().getName();
-//						realTypeName.add(argName);
-//					}
-//				}
-
-
-//				List<String> paramsParamTypeNames = new ArrayList<>();
-//				for (Class superType : parameterTypes) {
-//					paramsParamTypeNames.add(superType.getName());
-//				}
-//				postParameters.put("params", Arrays.asList(args));
-//				postParameters.put("paramTypeNames", realTypeName);
-//
-//				postParameters.put("paramsParamTypeNames", paramsParamTypeNames);
 
 				headers = new HttpHeaders();
 				MediaType mediaType = MediaType.parseMediaType("application/json; charset=UTF-8");
