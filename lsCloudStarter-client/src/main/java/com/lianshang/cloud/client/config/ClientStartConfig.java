@@ -15,6 +15,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
@@ -47,7 +48,8 @@ import java.util.regex.Pattern;
 @EnableEurekaClient
 @EnableDiscoveryClient
 @ConditionalOnMissingBean(ClientStartConfig.class)
-@EnableFeignClients
+@EnableFeignClients("com")
+@EnableCircuitBreaker
 @Order(1000)
 public class ClientStartConfig implements ApplicationContextAware, BeanPostProcessor {
 
