@@ -15,6 +15,6 @@ public class CloudServiceController {
 
     @RequestMapping("/actuator/info")
     public Response actuatorInfo(){
-        return Response.success("success info------");
+        return Response.success("服务端运行正常-------");
     }
 }

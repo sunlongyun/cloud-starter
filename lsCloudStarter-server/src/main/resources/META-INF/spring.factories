@@ -1,4 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.lianshang.cloud.server.config.ServerStarterConfig,\
   com.lianshang.cloud.server.controller.CloudServerController,\
+  com.lianshang.cloud.server.controller.CloudServiceController,\
   com.lianshang.cloud.server.config.CloudServerFilter
