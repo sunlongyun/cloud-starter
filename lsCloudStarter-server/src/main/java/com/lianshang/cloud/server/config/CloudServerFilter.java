@@ -65,11 +65,11 @@ public class CloudServerFilter implements Filter {
             int paramsLen = httpServletRequest.getParameterMap().size();
             Object targetBean = serviceBeanMaps.get(beanName);
             if (null != targetBean) {
-                Class targetClass = targetBean.getClass();
-                if (isProxyClass(targetClass)) {
-                    targetClass = targetClass.getSuperclass();
+                Class targetClazz = targetBean.getClass();
+                if (isProxyClass(targetClazz)) {
+                    targetClazz = targetClazz.getSuperclass();
                 }
-                Method method = getMethod(methodName, targetClass, paramsLen);
+                Method method = getMethod(methodName, targetClazz, paramsLen);
                 //从body体获取参数
                 Object[] paramValues = getParamValuesByRequestBody(method, httpServletRequest);
                 if (null == paramValues) {//如果body体没有取的参数,则尝试从parameter请求参数中获取

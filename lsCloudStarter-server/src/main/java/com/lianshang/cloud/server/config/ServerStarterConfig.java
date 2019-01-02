@@ -256,13 +256,14 @@ public class ServerStarterConfig
 	}
 
 	private static void setMethodInfo(Map<String, Object> data, Object bean) {
-		Class clzz = bean.getClass();
-		Method[] methods = clzz.getMethods();
+		Class beanClazz = bean.getClass();
+		Method[] methods = beanClazz.getMethods();
+
 		if (null != methods) {
 			List<Map<String, Object>> methodList = new ArrayList<>();
 			data.put("methodList", methodList);
-			for (Method m : methods) {
-				String methodName = m.getName();
+			for (Method method : methods) {
+				String methodName = method.getName();
 				if (methodName.equals("wait") || methodName.equals("equals") || methodName.equals("toString")
 						|| methodName.equals("hashCode") || methodName.equals("getClass") || methodName.equals("notify")
 						|| methodName.equals("notifyAll")) {
@@ -272,7 +273,7 @@ public class ServerStarterConfig
 				methodList.add(methodData);
 
 				methodData.put("methodName", methodName);
-				methodData.put("args", m.getParameterTypes());
+				methodData.put("args", method.getParameterTypes());
 			}
 		}
 	}
