@@ -34,6 +34,9 @@ import java.util.Map;
 @Order(Ordered.LOWEST_PRECEDENCE + 10)
 public class CloudServerFilter implements Filter {
 
+    public static final String PROXY = "PROXY";
+    public static final String CGLIB = "CGLIB";
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         log.info("CloudServerFilter初始化-------");
@@ -41,7 +44,8 @@ public class CloudServerFilter implements Filter {
 
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
         /**
          * 本系统所有发布的服务对象bean
          */
@@ -156,7 +160,7 @@ public class CloudServerFilter implements Filter {
      * @return
      */
     private static boolean isProxyClass(Class thisObjClass) {
-        if (thisObjClass.getName().toUpperCase().contains("CGLIB") || thisObjClass.getName().toUpperCase().contains("PROXY")) {
+        if (thisObjClass.getName().toUpperCase().contains(CGLIB) || thisObjClass.getName().toUpperCase().contains(PROXY)) {
             return true;
         }
         return false;
@@ -251,7 +255,9 @@ public class CloudServerFilter implements Filter {
      */
     private String getBodyStrFromRequest(HttpServletRequest request) {
         try {
-            BufferedReader streamReader = new BufferedReader(new InputStreamReader(request.getInputStream(), "UTF-8"));
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(request.getInputStream(),
+              "UTF-8"));
+
             StringBuilder responseStrBuilder = new StringBuilder();
             String inputStr;
             while ((inputStr = streamReader.readLine()) != null)
