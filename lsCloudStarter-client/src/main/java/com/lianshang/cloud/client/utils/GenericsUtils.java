@@ -36,8 +36,17 @@ public class GenericsUtils {
 
         Type genType = clazz.getGenericSuperclass();
         if (null == genType || genType.getTypeName() == Object.class.getName()) {
-            genType = clazz.getGenericInterfaces()[0];
+
+            Type[] genericInterfaces = clazz.getGenericInterfaces();
+            if (null != genericInterfaces && genericInterfaces.length > 0) {
+                genType = genericInterfaces[0];
+            }
         }
+
+        if (null == genType) {
+            return clazz;
+        }
+
         if (!(genType instanceof ParameterizedType)) {
             return Object.class;
         }

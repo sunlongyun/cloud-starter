@@ -16,9 +16,7 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 描述:
@@ -231,8 +229,12 @@ public class CloudServerFilter implements Filter {
                 for (Parameter parameter : parameters) {
                     String paramName = parameter.getName();
                     Class paramClass = parameter.getType();
+                    List<Object> values = new ArrayList<>();
+                    values.addAll(dataMap.values());
                     Object value = dataMap.get(paramName);
-
+                    if(null == value){
+                       value = values.get(i);
+                    }
                     if (null != value && paramClass != Object.class && paramClass != Serializable.class) {
                         value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), paramClass);
                     }else{
