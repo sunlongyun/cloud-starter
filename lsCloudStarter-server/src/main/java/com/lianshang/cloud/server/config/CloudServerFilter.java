@@ -1,5 +1,6 @@
 package com.lianshang.cloud.server.config;
 
+import com.lianshang.cloud.server.beans.LsCloudResponse;
 import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +17,9 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 描述:
@@ -83,16 +86,28 @@ public class CloudServerFilter implements Filter {
 
                 log.info("请求入参:{}",JsonUtils.object2JsonString(paramValues));
 
-                Response res = null;
+                LsCloudResponse res = null;
                 try {
                     Object targetResult = method.invoke(targetBean, paramValues);
-                    res = Response.success(targetResult);
-                } catch (Exception e) {
-                    log.error("请求异常:", e);
-                    res = Response.fail(e.getMessage());
+                    res = LsCloudResponse.success(targetResult);
+                } catch (Throwable e) {
+                    log.error("服务端service执行失败:", e);
+
+                    String errorMsg = e.getMessage();
+                    if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
+                        Throwable throwable = e.getCause();
+                        errorMsg = throwable.getMessage();
+                    }
+                    if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
+                        errorMsg = "远程服务调用失败,请联系管理员--CloudServerFilter";
+                    }
+
+                    e.printStackTrace();
+
+                    res = LsCloudResponse.fail(errorMsg);
                 }
                 if (null == res) {
-                    res = Response.success();
+                    res = LsCloudResponse.success();
                 }
 
                 httpServletResponse.setContentType("application/json; charset=utf-8");

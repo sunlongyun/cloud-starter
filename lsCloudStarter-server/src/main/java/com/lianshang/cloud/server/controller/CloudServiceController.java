@@ -1,6 +1,6 @@
 package com.lianshang.cloud.server.controller;
 
-import com.lianshang.cloud.server.config.Response;
+import com.lianshang.cloud.server.beans.LsCloudResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CloudServiceController {
 
     @RequestMapping("/actuator/info")
-    public Response actuatorInfo(){
-        return Response.success("服务端运行正常-------");
+    public LsCloudResponse actuatorInfo(){
+        return LsCloudResponse.success("服务端运行正常-------");
     }
 }

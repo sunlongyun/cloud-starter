@@ -3,7 +3,6 @@ package com.lianshang.cloud.client.config;
 import com.lianshang.cloud.client.annotation.LsCloudAutowired;
 import com.lianshang.cloud.client.beans.LsCloudResponse;
 import com.lianshang.cloud.client.enums.ResponseCodeEnum;
-import com.lianshang.cloud.client.utils.FastJsonUtils;
 import com.lianshang.cloud.client.utils.GenericsUtils;
 import com.lianshang.cloud.client.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -201,7 +200,10 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			 * 获取返回值
 			 */
 			LsCloudResponse lsCloudResponse = getLsCloudResponse(url, restTemplate, formEntity);
-
+			if (ResponseCodeEnum.FAIL.code().equals(lsCloudResponse.getCode())
+			&& StringUtils.isEmpty(lsCloudResponse.getMsg())) {
+				lsCloudResponse.setMsg("远程服务调用失败");
+			}
 			//完成目标类型的转换
 			Object targetResult = handleResult(method, lsCloudResponse);
 			String jsonResult = JsonUtils.object2JsonString(targetResult);

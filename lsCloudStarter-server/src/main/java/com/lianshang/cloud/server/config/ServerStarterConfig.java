@@ -97,7 +97,6 @@ public class ServerStarterConfig
 			return LsCloudResponse.fail("未找接口对应的bean【" + interfaceName + "】");
 		}
 
-		String returnTypeName = null;
 		try {
 			Class<?> beanClass = bean.getClass();
 
@@ -116,9 +115,8 @@ public class ServerStarterConfig
 			if (null == method) {
 				return LsCloudResponse.fail("未找到bean【" + interfaceName + "】中符合条件的方法【" + methodName + "】");
 			}
-			returnTypeName = method.getGenericReturnType().getTypeName();
 			Object value = method.invoke(bean, targetParams);
-			return LsCloudResponse.success(returnTypeName, value);
+			return LsCloudResponse.success(value);
 
 		} catch (Exception e) {
 
@@ -135,7 +133,7 @@ public class ServerStarterConfig
 
 			e.printStackTrace();
 
-			return LsCloudResponse.fail(returnTypeName, errorMsg);
+			return LsCloudResponse.fail(errorMsg);
 		}
 	}
 
