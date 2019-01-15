@@ -13,8 +13,8 @@ import lombok.Data;
 public class LsCloudResponse implements Serializable {
 
   private static final long serialVersionUID = -7096601129585145021L;
-  private String code = ResponseCodeEnum.SUCCESS.code();
-  private String msg = ResponseCodeEnum.SUCCESS.msg();
+  private String code = "";
+  private String msg = "";
   /**
    * 返回值类型名称
    */

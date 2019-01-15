@@ -61,12 +61,15 @@ public class CloudServerFilter implements Filter {
         String[] paths = requestPath.split("\\/");
 
         if (paths.length == 2) {
+
             String beanName = paths[0];
             beanName = upperCase(beanName);
             String methodName = paths[1];
             int paramsLen = httpServletRequest.getParameterMap().size();
             Object targetBean = serviceBeanMaps.get(beanName);
+
             if (null != targetBean) {
+
                 Class targetClazz = targetBean.getClass();
                 if (isProxyClass(targetClazz)) {
                     targetClazz = targetClazz.getSuperclass();
@@ -77,6 +80,9 @@ public class CloudServerFilter implements Filter {
                 if (null == paramValues) {//如果body体没有取的参数,则尝试从parameter请求参数中获取
                     paramValues = getParamValuesByRequestParams(httpServletRequest, method);
                 }
+
+                log.info("请求入参:{}",JsonUtils.object2JsonString(paramValues));
+
                 Response res = null;
                 try {
                     Object targetResult = method.invoke(targetBean, paramValues);
@@ -207,6 +213,7 @@ public class CloudServerFilter implements Filter {
      * @return
      */
     private Object[] getParamValuesByRequestBody(Method method, HttpServletRequest httpServletRequest) {
+
         if (method != null) {
             int paramsSize = method.getParameterCount();
             //首先尝试从body中取值
