@@ -107,7 +107,15 @@ public class CloudServerFilter implements Filter {
     private String upperCase(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
-
+    /**
+     * 首字母小写
+     *
+     * @param str
+     * @return
+     */
+    private String lowerCase(String str) {
+        return str.substring(0, 1).toLowerCase() + str.substring(1);
+    }
     /**
      * 获取目标函数
      *
@@ -231,14 +239,15 @@ public class CloudServerFilter implements Filter {
                 }
 
                 for (Parameter parameter : parameters) {
-                    String paramName = parameter.getName();
                     Class paramClass = parameter.getType();
-                    List<Object> values = new ArrayList<>();
-                    values.addAll(dataMap.values());
+                    String paramName = parameter.getName();
                     Object value = dataMap.get(paramName);
+
                     if(null == value){
-                       value = values.get(i);
+                        paramName = lowerCase(paramClass.getSimpleName());
+                        value = dataMap.get(paramName);
                     }
+
                     if (null != value && paramClass != Object.class && paramClass != Serializable.class) {
                         value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), paramClass);
                     }else{
