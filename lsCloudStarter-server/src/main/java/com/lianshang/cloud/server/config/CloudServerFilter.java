@@ -226,6 +226,10 @@ public class CloudServerFilter implements Filter {
                 //尝试转为真实的参数类型
                 int i = 0;
                 Map<String, Object> dataMap = JsonUtils.json2Object(jsonBody, HashMap.class);
+                if(null == dataMap || dataMap.isEmpty()){
+                    return pValues;
+                }
+
                 for (Parameter parameter : parameters) {
                     String paramName = parameter.getName();
                     Class paramClass = parameter.getType();
