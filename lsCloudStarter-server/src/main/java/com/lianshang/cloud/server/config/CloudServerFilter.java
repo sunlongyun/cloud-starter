@@ -1,6 +1,7 @@
 package com.lianshang.cloud.server.config;
 
 import com.lianshang.cloud.server.beans.LsCloudResponse;
+import com.lianshang.cloud.server.utils.FastJsonUtils;
 import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -69,18 +70,33 @@ public class CloudServerFilter implements Filter {
             String beanName = paths[0];
             beanName = upperCase(beanName);
             String methodName = paths[1];
-            int paramsLen = httpServletRequest.getParameterMap().size();
-            Object targetBean = serviceBeanMaps.get(beanName);
 
+            Map<String, String[]> requestMap = httpServletRequest.getParameterMap();
+            int paramsLen = requestMap.size();
+            Object targetBean = serviceBeanMaps.get(beanName);
+            //做串联日志的参数不能参与选择方法的计算
+            if (requestMap.containsKey("lsReq")) {
+                paramsLen = paramsLen - 1;
+            }
             if (null != targetBean) {
 
                 Class targetClazz = targetBean.getClass();
                 if (isProxyClass(targetClazz)) {
                     targetClazz = targetClazz.getSuperclass();
                 }
+                Class interFaceClazz = null;
+                Class[] interfaces = targetClazz.getInterfaces();
+
+                if (null != interfaces && interfaces.length > 0) {
+
+                    interFaceClazz = targetClazz.getInterfaces()[0];
+
+                } else {
+                    interFaceClazz = targetClazz.getSuperclass();
+                }
                 Method method = getMethod(methodName, targetClazz, paramsLen);
                 //从body体获取参数
-                Object[] paramValues = getParamValuesByRequestBody(method, httpServletRequest);
+                Object[] paramValues = getParamValuesByRequestBody(method, interFaceClazz, httpServletRequest);
                 if (null == paramValues) {//如果body体没有取的参数,则尝试从parameter请求参数中获取
                     paramValues = getParamValuesByRequestParams(httpServletRequest, method);
                 }
@@ -165,9 +181,9 @@ public class CloudServerFilter implements Filter {
                 }
             }
 
-            //取名称相同的第一个
+            //取名称相同符合条件的第一个
             for (Method method : methods) {
-                if (method.getName().equals(methodName)) {
+                if (method.getName().equals(methodName) && method.getParameters().length >= paramsLen) {
                     return method;
                 }
             }
@@ -233,9 +249,10 @@ public class CloudServerFilter implements Filter {
      *
      * @param method
      * @param httpServletRequest
+     * @param interFaceClazz
      * @return
      */
-    private Object[] getParamValuesByRequestBody(Method method, HttpServletRequest httpServletRequest) {
+    private Object[] getParamValuesByRequestBody(Method method, Class interFaceClazz, HttpServletRequest httpServletRequest) {
 
         if (method != null) {
             int paramsSize = method.getParameterCount();
@@ -249,28 +266,38 @@ public class CloudServerFilter implements Filter {
                 //只有一个参数
                 if (paramsSize == 1) {
                     Type parameterizedType = parameters[0].getParameterizedType();
-                    Class paramClass = parameters[0].getClass();
+                    Class paramClass = parameters[0].getType();
                     log.info("type==>{}", parameterizedType);
                     Object value = null;
 
                     if (paramClass != Object.class && paramClass != Serializable.class) {
                         value = JsonUtils.json2Object(jsonBody, parameterizedType);
-                    }else{
+                    }
+                    if(null == value){
                         value = jsonBody;
                     }
-
                     pValues[0] = value;
                     return pValues;
                 }
 
 
                 //尝试转为真实的参数类型
-                int i = 0;
                 Map<String, Object> dataMap = JsonUtils.json2Object(jsonBody, HashMap.class);
                 if(null == dataMap || dataMap.isEmpty()){
                     return pValues;
                 }
 
+                int i = 0;
+                if (null != interFaceClazz) {
+                    try {
+                        Method interMethod = interFaceClazz.getDeclaredMethod(method.getName(), method.getParameterTypes());
+                        if (null != interMethod) {
+                            parameters = interMethod.getParameters();
+                        }
+                    } catch (Exception ex) {
+
+                    }
+                }
                 for (Parameter parameter : parameters) {
                     Type parameterizedType = parameter.getParameterizedType();
                     Class paramClass = parameter.getType();

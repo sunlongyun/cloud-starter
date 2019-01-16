@@ -14,10 +14,9 @@ import java.io.Serializable;
 public class LsCloudResponse implements Serializable {
 
   private static final long serialVersionUID = -7096601129585145021L;
-  private String code = ResponseCodeEnum.SUCCESS.code();
-  private String msg = ResponseCodeEnum.SUCCESS.msg();
-  private Object data = new Serializable() {
-  };
+  private String code = null;
+  private String msg = null;
+  private Object data = null;
 
   private LsCloudResponse(String code, String msg, Object data) {
     this.code = code;
