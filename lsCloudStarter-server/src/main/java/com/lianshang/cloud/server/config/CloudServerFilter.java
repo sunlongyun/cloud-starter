@@ -1,11 +1,12 @@
 package com.lianshang.cloud.server.config;
 
 import com.lianshang.cloud.server.beans.LsCloudResponse;
-import com.lianshang.cloud.server.utils.FastJsonUtils;
 import com.lianshang.cloud.server.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.Ordered;
+import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.annotation.Order;
 
 import javax.servlet.*;
@@ -79,60 +80,66 @@ public class CloudServerFilter implements Filter {
                 paramsLen = paramsLen - 1;
             }
             if (null != targetBean) {
-
-                Class targetClazz = targetBean.getClass();
-                if (isProxyClass(targetClazz)) {
-                    targetClazz = targetClazz.getSuperclass();
-                }
-                Class interFaceClazz = null;
-                Class[] interfaces = targetClazz.getInterfaces();
-
-                if (null != interfaces && interfaces.length > 0) {
-
-                    interFaceClazz = targetClazz.getInterfaces()[0];
-
-                } else {
-                    interFaceClazz = targetClazz.getSuperclass();
-                }
-                Method method = getMethod(methodName, targetClazz, paramsLen);
-                //从body体获取参数
-                Object[] paramValues = getParamValuesByRequestBody(method, interFaceClazz, httpServletRequest);
-                if (null == paramValues) {//如果body体没有取的参数,则尝试从parameter请求参数中获取
-                    paramValues = getParamValuesByRequestParams(httpServletRequest, method);
-                }
-
-                log.info("请求入参:{}",JsonUtils.object2JsonString(paramValues));
-
-                LsCloudResponse res = null;
-                try {
-                    Object targetResult = method.invoke(targetBean, paramValues);
-                    res = LsCloudResponse.success(targetResult);
-                } catch (Throwable e) {
-                    log.error("服务端service执行失败:", e);
-
-                    String errorMsg = e.getMessage();
-                    if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
-                        Throwable throwable = e.getCause();
-                        errorMsg = throwable.getMessage();
-                    }
-                    if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
-                        errorMsg = "远程服务调用失败,请联系管理员!";
-                    }
-
-                    e.printStackTrace();
-
-                    res = LsCloudResponse.fail(errorMsg);
-                }
-                if (null == res) {
-                    res = LsCloudResponse.success();
-                }
-
-                httpServletResponse.setContentType("application/json; charset=utf-8");
-                httpServletResponse.getWriter().write(JsonUtils.object2JsonString(res));
+                handleTargetBean(httpServletRequest, httpServletResponse, methodName, paramsLen, targetBean);
                 return;
             }
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * 处理返回结果
+     * @param httpServletRequest
+     * @param httpServletResponse
+     * @param methodName
+     * @param paramsLen
+     * @param targetBean
+     * @throws IOException
+     */
+    private void handleTargetBean(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, String methodName, int paramsLen, Object targetBean) throws IOException {
+
+        Class targetClazz = targetBean.getClass();
+
+        if (isProxyClass(targetClazz)) {
+            targetClazz = targetClazz.getSuperclass();
+        }
+
+        Method method = getMethod(methodName, targetClazz, paramsLen);
+        //从body体获取参数
+        Object[] paramValues = getParamValuesByRequestBody(method, httpServletRequest);
+        if (null == paramValues) { //如果body体没有取的参数,则尝试从parameter请求参数中获取
+            paramValues = getParamValuesByRequestParams(httpServletRequest, method);
+        }
+
+        log.info("请求入参:{}", JsonUtils.object2JsonString(paramValues));
+
+        LsCloudResponse res = null;
+        try {
+            Object targetResult = method.invoke(targetBean, paramValues);
+            res = LsCloudResponse.success(targetResult);
+        } catch (Throwable e) {
+            log.error("服务端service执行失败:", e);
+
+            String errorMsg = e.getMessage();
+            if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
+                Throwable throwable = e.getCause();
+                errorMsg = throwable.getMessage();
+            }
+            if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
+                errorMsg = "远程服务调用失败,请联系管理员!";
+            }
+
+            e.printStackTrace();
+
+            res = LsCloudResponse.fail(errorMsg);
+        }
+        if (null == res) {
+            res = LsCloudResponse.success();
+        }
+
+        httpServletResponse.setContentType("application/json; charset=utf-8");
+        httpServletResponse.getWriter().write(JsonUtils.object2JsonString(res));
+        return;
     }
 
 
@@ -249,78 +256,101 @@ public class CloudServerFilter implements Filter {
      *
      * @param method
      * @param httpServletRequest
-     * @param interFaceClazz
      * @return
      */
-    private Object[] getParamValuesByRequestBody(Method method, Class interFaceClazz, HttpServletRequest httpServletRequest) {
+    private Object[] getParamValuesByRequestBody(Method method, HttpServletRequest httpServletRequest) {
 
         if (method != null) {
             int paramsSize = method.getParameterCount();
             //首先尝试从body中取值
             String jsonBody = getBodyStrFromRequest(httpServletRequest);
             Parameter[] parameters = method.getParameters();
-            //转为map对象
-            if (StringUtils.isNotEmpty(jsonBody)) {//可以取到值,尝试反序列化到真实的类型
+
+            //转为map对象,  可以取到值,尝试反序列化到真实的类型
+            if (StringUtils.isNotEmpty(jsonBody)) {
+
                 Object[] pValues = new Object[paramsSize];
 
                 //只有一个参数
-                if (paramsSize == 1) {
-                    Type parameterizedType = parameters[0].getParameterizedType();
-                    Class paramClass = parameters[0].getType();
-                    log.info("type==>{}", parameterizedType);
-                    Object value = null;
+                if (HandleSingleParam(paramsSize, jsonBody, parameters, pValues)) return pValues;
 
-                    if (paramClass != Object.class && paramClass != Serializable.class) {
-                        value = JsonUtils.json2Object(jsonBody, parameterizedType);
-                    }
-                    if(null == value){
-                        value = jsonBody;
-                    }
-                    pValues[0] = value;
-                    return pValues;
-                }
-
-
-                //尝试转为真实的参数类型
+                //多个参数
                 Map<String, Object> dataMap = JsonUtils.json2Object(jsonBody, HashMap.class);
                 if(null == dataMap || dataMap.isEmpty()){
                     return pValues;
                 }
+                if (getResultValues(method, parameters, pValues, dataMap)) return null;
 
-                int i = 0;
-                if (null != interFaceClazz) {
-                    try {
-                        Method interMethod = interFaceClazz.getDeclaredMethod(method.getName(), method.getParameterTypes());
-                        if (null != interMethod) {
-                            parameters = interMethod.getParameters();
-                        }
-                    } catch (Exception ex) {
-
-                    }
-                }
-                for (Parameter parameter : parameters) {
-                    Type parameterizedType = parameter.getParameterizedType();
-                    Class paramClass = parameter.getType();
-                    String paramName = parameter.getName();
-                    Object value = dataMap.get(paramName);
-
-                    if(null == value){
-                        paramName = lowerCase(paramClass.getSimpleName());
-                        value = dataMap.get(paramName);
-                    }
-
-                    if (null != value && paramClass != Object.class && paramClass != Serializable.class) {
-                        value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), parameterizedType);
-                    }else{
-                        value = JsonUtils.object2JsonString(value);
-                    }
-                    pValues[i] = value;
-                    i++;
-                }
                 return pValues;
             }
         }
         return null;
+    }
+
+    /**
+     * 一个参数解析
+     * @param paramsSize
+     * @param jsonBody
+     * @param parameters
+     * @param pValues
+     * @return
+     */
+    private boolean HandleSingleParam(int paramsSize, String jsonBody, Parameter[] parameters, Object[] pValues) {
+        if (paramsSize == 1) {
+            Type parameterizedType = parameters[0].getParameterizedType();
+            Class paramClass = parameters[0].getType();
+            log.info("type==>{}", parameterizedType);
+            Object value = null;
+
+            if (paramClass != Object.class && paramClass != Serializable.class) {
+                value = JsonUtils.json2Object(jsonBody, parameterizedType);
+            }
+            if(null == value){
+                value = jsonBody;
+            }
+            pValues[0] = value;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 获取 真实的返回结果 pValues
+     * @param method
+     * @param parameters
+     * @param pValues
+     * @param dataMap
+     * @return
+     */
+    private boolean getResultValues(Method method, Parameter[] parameters, Object[] pValues, Map<String, Object> dataMap) {
+        int i = 0;
+        ParameterNameDiscoverer pnd = new LocalVariableTableParameterNameDiscoverer();
+        String[] parameterNames =  pnd.getParameterNames(method);
+        if(null == parameterNames || parameterNames.length==0){
+            return true;
+        }
+        for (Parameter parameter : parameters) {
+
+            Type parameterizedType = parameter.getParameterizedType();
+            Class paramClass = parameter.getType();
+            String paramName = parameterNames[i];
+
+            Object value = dataMap.get(paramName);
+
+            if(null == value){
+                paramName = lowerCase(paramClass.getSimpleName());
+                value = dataMap.get(paramName);
+            }
+
+            if (null != value && paramClass != Object.class && paramClass != Serializable.class) {
+                value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), parameterizedType);
+            }else{
+                value = JsonUtils.object2JsonString(value);
+            }
+            pValues[i] = value;
+            i++;
+        }
+        return false;
     }
 
     /**
