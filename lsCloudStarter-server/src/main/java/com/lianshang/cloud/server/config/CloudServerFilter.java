@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,7 +100,7 @@ public class CloudServerFilter implements Filter {
                         errorMsg = throwable.getMessage();
                     }
                     if (org.springframework.util.StringUtils.isEmpty(errorMsg)) {
-                        errorMsg = "远程服务调用失败,请联系管理员--CloudServerFilter";
+                        errorMsg = "远程服务调用失败,请联系管理员!";
                     }
 
                     e.printStackTrace();
@@ -202,17 +203,24 @@ public class CloudServerFilter implements Filter {
      */
     private Object[] getParamValuesByRequestParams(HttpServletRequest httpServletRequest, Method method) {
         Enumeration<String> paramNames = httpServletRequest.getParameterNames();
+
+        if (null == method) {
+            return null;
+        }
         Parameter[] parameters = method.getParameters();
         int paramsSize = method.getParameterCount();
         Object[] paramValues = new Object[paramsSize];
         int i = 0;
         while (paramNames.hasMoreElements()) {
+
             String paramName = paramNames.nextElement();
             Object value = httpServletRequest.getParameter(paramName);
             Parameter parameter = parameters[i];
             Class parameterClass = parameter.getType();
+            Type parameterizedType = parameter.getParameterizedType();
+
             if (value != null && parameterClass != Object.class && parameterClass != Serializable.class) {
-                value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), parameterClass);
+                value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), parameterizedType);
             }
             paramValues[i] = value;
             i++;
@@ -240,10 +248,13 @@ public class CloudServerFilter implements Filter {
 
                 //只有一个参数
                 if (paramsSize == 1) {
-                    Class paramClass = parameters[0].getType();
+                    Type parameterizedType = parameters[0].getParameterizedType();
+                    Class paramClass = parameters[0].getClass();
+                    log.info("type==>{}", parameterizedType);
                     Object value = null;
+
                     if (paramClass != Object.class && paramClass != Serializable.class) {
-                        value = JsonUtils.json2Object(jsonBody, paramClass);
+                        value = JsonUtils.json2Object(jsonBody, parameterizedType);
                     }else{
                         value = jsonBody;
                     }
@@ -261,6 +272,7 @@ public class CloudServerFilter implements Filter {
                 }
 
                 for (Parameter parameter : parameters) {
+                    Type parameterizedType = parameter.getParameterizedType();
                     Class paramClass = parameter.getType();
                     String paramName = parameter.getName();
                     Object value = dataMap.get(paramName);
@@ -271,7 +283,7 @@ public class CloudServerFilter implements Filter {
                     }
 
                     if (null != value && paramClass != Object.class && paramClass != Serializable.class) {
-                        value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), paramClass);
+                        value = JsonUtils.json2Object(JsonUtils.object2JsonString(value), parameterizedType);
                     }else{
                         value = JsonUtils.object2JsonString(value);
                     }
