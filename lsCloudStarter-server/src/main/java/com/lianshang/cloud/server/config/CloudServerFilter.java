@@ -40,6 +40,7 @@ public class CloudServerFilter implements Filter {
 
     public static final String PROXY = "PROXY";
     public static final String CGLIB = "CGLIB";
+    public static final String LS_REQ = "lsReq";
     private ThreadLocal<String> reqBodyLocal = new ThreadLocal<>();
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -76,7 +77,7 @@ public class CloudServerFilter implements Filter {
             int paramsLen = requestMap.size();
             Object targetBean = serviceBeanMaps.get(beanName);
             //做串联日志的参数不能参与选择方法的计算
-            if (requestMap.containsKey("lsReq")) {
+            if (requestMap.containsKey(LS_REQ)) {
                 paramsLen = paramsLen - 1;
             }
             if (null != targetBean) {
@@ -179,23 +180,13 @@ public class CloudServerFilter implements Filter {
             jsonBody = jsonBody.replaceAll("\\{", "")
               .replaceAll("\\}", "");
             if (StringUtils.isNotEmpty(jsonBody)) {
-                paramsLen = 1;
+                paramsLen = 1;//防止获取到空参数的函数
             }
         }
 
         if (null != methods) {
 
-            if (paramsLen == 0) {
-                for (Method method : methods) {
-
-                    int len = method.getParameters().length;
-                    if (paramsLen == 0 && method.getName().equals(methodName) && len == 0) {
-                        return method;
-                    }
-                }
-            } else {
-
-                //先比较参数相同的
+                //先比较参数长度相同的,client客户端会把真实的参数长度传递过来
                 for (Method method : methods) {
                     int len = method.getParameters().length;
                     if (method.getName().equals(methodName) && len == paramsLen) {
@@ -203,13 +194,13 @@ public class CloudServerFilter implements Filter {
                     }
                 }
 
+                //feign调用,null参数丢失的话,寻找符合条件的第一个方法
                 for (Method method : methods) {
                     int len = method.getParameters().length;
                     if (method.getName().equals(methodName) && len > paramsLen) {
                         return method;
                     }
                 }
-            }
 
         }
 
@@ -258,7 +249,7 @@ public class CloudServerFilter implements Filter {
 
             String paramName = paramNames.nextElement();
 
-            if ("lsReq".equals(paramName)) {
+            if (LS_REQ.equals(paramName)) {
                 continue;
             }
 
@@ -347,13 +338,17 @@ public class CloudServerFilter implements Filter {
      * @param dataMap
      * @return
      */
-    private boolean getResultValues(Method method, Parameter[] parameters, Object[] pValues, Map<String, Object> dataMap) {
-        int i = 0;
+    private boolean getResultValues(Method method, Parameter[] parameters, Object[] pValues,
+                                    Map<String, Object> dataMap) {
+
+
         ParameterNameDiscoverer pnd = new LocalVariableTableParameterNameDiscoverer();
         String[] parameterNames =  pnd.getParameterNames(method);
         if(null == parameterNames || parameterNames.length==0){
             return true;
         }
+
+        int i = 0;
         for (Parameter parameter : parameters) {
 
             Type parameterizedType = parameter.getParameterizedType();
