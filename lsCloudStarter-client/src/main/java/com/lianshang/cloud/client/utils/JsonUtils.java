@@ -12,7 +12,7 @@ import java.util.Date;
 @Slf4j
 public class JsonUtils {
 
-    private static Gson gson = (new GsonBuilder()).setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+    private static Gson gson = (new GsonBuilder()).setDateFormat("yyyy-MM-dd HH:mm:ss").serializeNulls().create();
     private static JsonParser jsonParse = new JsonParser();
 
     public JsonUtils() {
