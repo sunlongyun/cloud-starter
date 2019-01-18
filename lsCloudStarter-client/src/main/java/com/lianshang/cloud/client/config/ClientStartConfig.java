@@ -186,7 +186,9 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 			HttpHeaders headers = getHeader.getHeaders();
 
 			Object paramsObj = new Object();
+
 			String paramsJson = "{}";
+
 			if (!postParameters.isEmpty()) {
 				if (postParameters.size() == 1) {
 					paramsObj = postParameters.values().iterator().next();
@@ -194,8 +196,10 @@ public class ClientStartConfig implements ApplicationContextAware, BeanPostProce
 					paramsObj = postParameters;
 				}
 			}
+			log.info("postParameters=>{}", postParameters);
 			paramsJson = JsonUtils.object2JsonString(paramsObj);
 			HttpEntity<String> formEntity = new HttpEntity<String>(paramsJson, headers);
+			log.info("formEntity=={}", formEntity);
 			/**
 			 * 获取返回值
 			 */

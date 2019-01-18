@@ -40,7 +40,7 @@ public class CloudServerFilter implements Filter {
 
     public static final String PROXY = "PROXY";
     public static final String CGLIB = "CGLIB";
-
+    private ThreadLocal<String> reqBodyLocal = new ThreadLocal<>();
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         log.info("CloudServerFilter初始化-------");
@@ -104,12 +104,14 @@ public class CloudServerFilter implements Filter {
             targetClazz = targetClazz.getSuperclass();
         }
 
-        Method method = getMethod(methodName, targetClazz, paramsLen);
+        Method method = getMethod(methodName, targetClazz, paramsLen, httpServletRequest);
         //从body体获取参数
         Object[] paramValues = getParamValuesByRequestBody(method, httpServletRequest);
         if (null == paramValues) { //如果body体没有取的参数,则尝试从parameter请求参数中获取
             paramValues = getParamValuesByRequestParams(httpServletRequest, method);
         }
+
+        reqBodyLocal.remove();
 
         log.info("请求入参:{}", JsonUtils.object2JsonString(paramValues));
 
@@ -167,33 +169,48 @@ public class CloudServerFilter implements Filter {
      * @param targetClass
      * @return
      */
-    private Method getMethod(String methodName, Class targetClass, int paramsLen) {
+    private Method getMethod(String methodName, Class targetClass, int paramsLen, HttpServletRequest httpServletRequest) {
+
         Method[] methods = targetClass.getMethods();
+
+        String jsonBody = getBodyStrFromRequest(httpServletRequest);
+        log.info("jsonBody=>{}", jsonBody);
+        if (StringUtils.isNotEmpty(jsonBody)) {
+            jsonBody = jsonBody.replaceAll("\\{", "")
+              .replaceAll("\\}", "");
+            if (StringUtils.isNotEmpty(jsonBody)) {
+                paramsLen = 1;
+            }
+        }
+
         if (null != methods) {
 
-            //先进行参数数量相同的精准匹配
-            for (Method method : methods) {
-                if (method.getParameters().length == paramsLen && method.getName().equals(methodName)) {
-                    return method;
-                }
-            }
-
-            //参数可能在body传递过来,paramsLen=0时可能有一个参数
             if (paramsLen == 0) {
-                paramsLen = 1;
                 for (Method method : methods) {
-                    if (method.getParameters().length == paramsLen && method.getName().equals(methodName)) {
+
+                    int len = method.getParameters().length;
+                    if (paramsLen == 0 && method.getName().equals(methodName) && len == 0) {
+                        return method;
+                    }
+                }
+            } else {
+
+                //先比较参数相同的
+                for (Method method : methods) {
+                    int len = method.getParameters().length;
+                    if (method.getName().equals(methodName) && len == paramsLen) {
+                        return method;
+                    }
+                }
+
+                for (Method method : methods) {
+                    int len = method.getParameters().length;
+                    if (method.getName().equals(methodName) && len > paramsLen) {
                         return method;
                     }
                 }
             }
 
-            //取名称相同符合条件的第一个
-            for (Method method : methods) {
-                if (method.getName().equals(methodName) && method.getParameters().length >= paramsLen) {
-                    return method;
-                }
-            }
         }
 
         return null;
@@ -233,10 +250,18 @@ public class CloudServerFilter implements Filter {
         Parameter[] parameters = method.getParameters();
         int paramsSize = method.getParameterCount();
         Object[] paramValues = new Object[paramsSize];
+
+        if (paramsSize == 0) return paramValues;
+
         int i = 0;
         while (paramNames.hasMoreElements()) {
 
             String paramName = paramNames.nextElement();
+
+            if ("lsReq".equals(paramName)) {
+                continue;
+            }
+
             Object value = httpServletRequest.getParameter(paramName);
             Parameter parameter = parameters[i];
             Class parameterClass = parameter.getType();
@@ -360,19 +385,28 @@ public class CloudServerFilter implements Filter {
      * @return
      */
     private String getBodyStrFromRequest(HttpServletRequest request) {
-        try {
-            BufferedReader streamReader = new BufferedReader(new InputStreamReader(request.getInputStream(),
-              "UTF-8"));
 
-            StringBuilder responseStrBuilder = new StringBuilder();
-            String inputStr;
-            while ((inputStr = streamReader.readLine()) != null)
-                responseStrBuilder.append(inputStr);
+        String reqBody = reqBodyLocal.get();
 
-            return responseStrBuilder.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (StringUtils.isEmpty(reqBody)) {
+            try {
+
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(request.getInputStream(),
+                  "UTF-8"));
+
+                StringBuilder responseStrBuilder = new StringBuilder();
+                String inputStr;
+                while ((inputStr = streamReader.readLine()) != null)
+                    responseStrBuilder.append(inputStr);
+
+                reqBody = responseStrBuilder.toString();
+
+                reqBodyLocal.set(reqBody);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+
+        return reqBody;
     }
 }
