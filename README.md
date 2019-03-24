@@ -62,7 +62,8 @@
 	@RequestMapping("order")
 	public class OrderController {
 
-  	@LsCloudAutowired("CLOTH2-BIZ-SERVICE") #####CLOTH2-BIZ-SERVICE 为eureka注册中心中服务(应用)名称
+         ///CLOTH2-BIZ-SERVICE 为eureka注册中心中服务(应用)名称
+  	@LsCloudAutowired("CLOTH2-BIZ-SERVICE")
   	private OrderService orderService;
 
   	.....
