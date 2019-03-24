@@ -108,5 +108,3 @@
     	【a660f9b2-a669-4b56-b585-1b8369d4efcc_-55】 2018-12-17 15:00:36.943 [http-nio-8080-exec-1] INFO  com.lianshang.common.controller.aspect.HandleControllerAspect -97 - 响应信息===> className:BasicErrorController,methodName:errorHtml,入参:[org.apache.catalina.core.ApplicationHttpRequest@3529f16a, org.apache.catalina.connector.ResponseFacade@2152dbd3], 返回结果:null, 耗时:136
     	 日志虽然在不同平台,但是有着相同的前缀  【a660f9b2-a669-4b56-b585-1b8369d4efcc_-55】
 
-
-##################################################
