@@ -1,1 +1,104 @@
-<mxfile host="app.diagrams.net" modified="2022-07-07T12:32:50.742Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36" version="20.0.4" etag="vznXxGntDcOhQV2JE9w5" type="github"><diagram id="Fi8yWxrCgs_Qg_j9WBYG">UzV2zq1wL0osyPDNT0nNUTV2VTV2LsrPL4GwciucU3NyVI0MMlNUjV1UjYwMgFjVyA2HrCFY1qAgsSg1rwSLBiADYTaQg2Y1AA==</diagram></mxfile>
+<mxfile host="app.diagrams.net" modified="2022-07-07T13:34:28.630Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36" etag="GMlf-Mzind6Wr8FzOgoh" version="20.0.4" type="github">
+  <diagram id="Fi8yWxrCgs_Qg_j9WBYG" name="Page-1">
+    <mxGraphModel dx="868" dy="1619" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-1" target="n9cGwZYB9j5LiPZOzdHw-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-1" value="牧羊人网关" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="30" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-2" target="n9cGwZYB9j5LiPZOzdHw-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="40" />
+              <mxPoint x="380" y="40" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-2" value="Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="370" y="-70" width="20" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-19" target="n9cGwZYB9j5LiPZOzdHw-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-19" value="mapi 做了鉴权、限流，对外提供统一接口" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="110" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-29" value="主流程都需要" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-22" target="n9cGwZYB9j5LiPZOzdHw-24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="250" />
+              <mxPoint x="200" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-33" value="一键选品" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-22" target="n9cGwZYB9j5LiPZOzdHw-32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="414" y="270" />
+              <mxPoint x="414" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-35" value="坑位卡控" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-22" target="n9cGwZYB9j5LiPZOzdHw-34">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="545" y="250" />
+              <mxPoint x="545" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-38" value="主流程都需要" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-22" target="n9cGwZYB9j5LiPZOzdHw-25">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="250" />
+              <mxPoint x="310" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-41" value="排期服务" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-22" target="n9cGwZYB9j5LiPZOzdHw-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-22" value="双擎选品" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="180" width="500" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-24" value="网店" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="302.5" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-25" value="品类" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="305" width="80" height="37.5" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-32" value="算法选品" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="305" width="99" height="37.5" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="n9cGwZYB9j5LiPZOzdHw-34" target="n9cGwZYB9j5LiPZOzdHw-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-34" value="坑位管理平台" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="310" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-36" value="坑位卡控" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="505" y="380" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-40" value="档期服务" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-42" value="候选池" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="260" y="185" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-43" value="预排期池" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="170" y="185" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-44" value="排期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="450" y="185" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n9cGwZYB9j5LiPZOzdHw-45" value="上架" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="540" y="185" width="90" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
